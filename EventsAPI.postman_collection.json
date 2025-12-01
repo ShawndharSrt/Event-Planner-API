@@ -1,0 +1,329 @@
+{
+  "info": {
+    "_postman_id": "events-api-collection-uuid",
+    "name": "Events API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for all endpoints of Events API"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://localhost:8080"},
+    {"key": "authToken", "value": ""},
+    {"key": "eventId", "value": "event-id-here"},
+    {"key": "userId", "value": "user-id-here"},
+    {"key": "guestId", "value": "guest-id-here"},
+    {"key": "taskId", "value": "task-id-here"},
+    {"key": "notificationId", "value": "notification-id-here"}
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/auth/login","host": ["{{baseUrl}}"],"path": ["api", "auth", "login"]},
+            "body": {"mode": "raw", "raw": "{\n  \"email\": \"demo@example.com\",\n  \"password\": \"password\"\n}"}
+          }
+        },
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/auth/signup","host": ["{{baseUrl}}"],"path": ["api", "auth", "signup"]},
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"new@example.com\",\n  \"password\": \"password\"\n}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/users","host": ["{{baseUrl}}"],"path": ["api", "users"]}
+          }
+        },
+        {
+          "name": "Get User By Id",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/users/{{userId}}","host": ["{{baseUrl}}"],"path": ["api", "users", "{{userId}}"]}
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/users","host": ["{{baseUrl}}"],"path": ["api", "users"]},
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Sample\",\n  \"email\": \"sample@sample.com\",\n  \"password\": \"password\"\n}"}
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/users/{{userId}}","host": ["{{baseUrl}}"],"path": ["api", "users", "{{userId}}"]},
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Updated\",\n  \"email\": \"upd@upd.com\"\n}"}
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/users/{{userId}}","host": ["{{baseUrl}}"],"path": ["api", "users", "{{userId}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/events","host": ["{{baseUrl}}"],"path": ["api", "events"]}
+          }
+        },
+        {
+          "name": "Get Event By Id",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/events/{{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "events", "{{eventId}}"]}
+          }
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/events","host": ["{{baseUrl}}"],"path": ["api", "events"]},
+            "body": {"mode": "raw", "raw": "{\n  \"title\": \"My Event\",\n  \"type\": \"MEETING\",\n  \"status\": \"PLANNING\"\n}"}
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/events/{{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "events", "{{eventId}}"]},
+            "body": {"mode": "raw", "raw": "{\n  \"title\": \"Event Updated\"\n}"}
+          }
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/events/{{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "events", "{{eventId}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Guests",
+      "item": [
+        {
+          "name": "Get All Guests",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/guests?eventId={{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "guests"], "query": [{"key":"eventId", "value":"{{eventId}}"}]}
+          }
+        },
+        {
+          "name": "Get Guest By Id",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/guests/{{guestId}}","host": ["{{baseUrl}}"],"path": ["api", "guests", "{{guestId}}"]}
+          }
+        },
+        {
+          "name": "Create Guest",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/guests","host": ["{{baseUrl}}"],"path": ["api", "guests"]},
+            "body": {"mode": "raw", "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"}
+          }
+        },
+        {
+          "name": "Update Guest",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/guests/{{guestId}}","host": ["{{baseUrl}}"],"path": ["api", "guests", "{{guestId}}"]},
+            "body": {"mode": "raw", "raw": "{\n  \"firstName\": \"Jane\"\n}"}
+          }
+        },
+        {
+          "name": "Delete Guest",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/guests/{{guestId}}","host": ["{{baseUrl}}"],"path": ["api", "guests", "{{guestId}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/tasks?eventId={{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "tasks"], "query": [{"key":"eventId", "value":"{{eventId}}"}]}
+          }
+        },
+        {
+          "name": "Get Task By Id",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/tasks/{{taskId}}","host": ["{{baseUrl}}"],"path": ["api", "tasks", "{{taskId}}"]}
+          }
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/tasks","host": ["{{baseUrl}}"],"path": ["api", "tasks"]},
+            "body": {"mode": "raw", "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"title\": \"Party Setup\"\n}"}
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/tasks/{{taskId}}","host": ["{{baseUrl}}"],"path": ["api", "tasks", "{{taskId}}"]},
+            "body": {"mode": "raw", "raw": "{\n  \"title\": \"Balloon Setup\"\n}"}
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/tasks/{{taskId}}","host": ["{{baseUrl}}"],"path": ["api", "tasks", "{{taskId}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budget",
+      "item": [
+        {
+          "name": "Get Budget For Event",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/budget/{{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "budget", "{{eventId}}"]}
+          }
+        },
+        {
+          "name": "Update Budget For Event",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}, {"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/budget/{{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "budget", "{{eventId}}"]},
+            "body": {"mode": "raw", "raw": "{\n  \"totalBudget\": 5000,\n  \"spent\": 2500,\n  \"notes\": \"Decorations\"\n}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notification",
+      "item": [
+        {
+          "name": "List Notifications For User",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/notifications?userId={{userId}}","host": ["{{baseUrl}}"],"path": ["api", "notifications"], "query":[{"key":"userId","value":"{{userId}}"}]}
+          }
+        },
+        {
+          "name": "List Notifications For Event",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/notifications?eventId={{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "notifications"], "query":[{"key":"eventId","value":"{{eventId}}"}]}
+          }
+        },
+        {
+          "name": "Mark Notification As Read",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read","host": ["{{baseUrl}}"],"path": ["api", "notifications", "{{notificationId}}", "read"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/settings?userId={{userId}}&eventId={{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "settings"], "query":[{"key":"userId","value":"{{userId}}"}, {"key":"eventId","value":"{{eventId}}"}]}
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"},{"key":"Content-Type","value":"application/json"}],
+            "url": {"raw": "{{baseUrl}}/api/settings?userId={{userId}}&eventId={{eventId}}","host": ["{{baseUrl}}"],"path": ["api", "settings"], "query":[{"key":"userId","value":"{{userId}}"}, {"key":"eventId","value":"{{eventId}}"}]},
+            "body": {"mode": "raw", "raw": "{\n  \"preferencesJson\": \"{}\"\n}"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "item": [
+        {
+          "name": "Get All Calendar Events",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/calendar/events","host": ["{{baseUrl}}"],"path": ["api", "calendar", "events"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{authToken}}"}],
+            "url": {"raw": "{{baseUrl}}/api/dashboard/overview","host": ["{{baseUrl}}"],"path": ["api", "dashboard", "overview"]}
+          }
+        }
+      ]
+    }
+  ]
+}

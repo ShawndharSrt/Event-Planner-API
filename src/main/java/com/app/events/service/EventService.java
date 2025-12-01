@@ -1,0 +1,17 @@
+package com.app.events.service;
+
+import com.app.events.model.Event;
+import java.util.List;
+import java.util.Optional;
+
+public interface EventService {
+    List<Event> getAllEvents();
+
+    Optional<Event> getEventById(String id);
+
+    Event createEvent(Event event);
+
+    Event updateEvent(String id, Event event);
+
+    void deleteEvent(String id);
+}
