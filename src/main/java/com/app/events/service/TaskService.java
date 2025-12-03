@@ -1,5 +1,6 @@
 package com.app.events.service;
 
+import com.app.events.dto.DashboardTask;
 import com.app.events.model.Task;
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,6 @@ public interface TaskService {
     Task updateTask(String id, Task task);
 
     void deleteTask(String id);
+
+    List<DashboardTask> getDashboardTasks(int limit);
 }

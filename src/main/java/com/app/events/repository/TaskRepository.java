@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface TaskRepository extends MongoRepository<Task, String> {
     List<Task> findByEventId(String eventId);
+    List<Task> findByStatusNot(String status);
 }

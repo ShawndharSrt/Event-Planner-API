@@ -1,5 +1,6 @@
 package com.app.events.service;
 
+import com.app.events.dto.RecentEvent;
 import com.app.events.model.Event;
 import java.util.List;
 import java.util.Optional;
@@ -14,4 +15,6 @@ public interface EventService {
     Event updateEvent(String id, Event event);
 
     void deleteEvent(String id);
+
+    List<RecentEvent> getRecentEvents(int limit);
 }

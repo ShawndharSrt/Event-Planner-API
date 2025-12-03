@@ -1,5 +1,7 @@
 package com.app.events.service.impl;
 
+import com.app.events.dto.DashboardTask;
+import com.app.events.mapper.DashboardTaskMapper;
 import com.app.events.model.Task;
 import com.app.events.repository.TaskRepository;
 import com.app.events.service.TaskService;
@@ -14,6 +16,7 @@ import java.util.Optional;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
+    private final DashboardTaskMapper dashboardTaskMapper;
 
     @Override
     public List<Task> getAllTasks() {
@@ -47,5 +50,15 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void deleteTask(String id) {
         taskRepository.deleteById(id);
+    }
+
+    @Override
+    public List<DashboardTask> getDashboardTasks(int limit) {
+        List<Task> tasks = taskRepository.findByStatusNot("completed");
+
+        return dashboardTaskMapper.toDtoList(tasks)
+                .stream()
+                .limit(Math.max(limit, 0))
+                .toList();
     }
 }
