@@ -2,6 +2,7 @@ package com.app.events.service.impl;
 
 import com.app.events.model.User;
 import com.app.events.repository.UserRepository;
+import com.app.events.service.SequenceGeneratorService;
 import com.app.events.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final SequenceGeneratorService sequenceGeneratorService;
 
     @Override
     public List<User> getAllUsers() {
@@ -32,6 +34,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
+        // Generate userId in format AB00001, AB00002, etc.
+        long sequence = sequenceGeneratorService.generateSequence("user_sequence");
+        String userId = String.format("AB%05d", sequence);
+        user.setUserId(userId);
+
         // TODO: Encode password
         return userRepository.save(user);
     }

@@ -1,12 +1,18 @@
 package com.app.events.service;
 
+import com.app.events.dto.BudgetSummary;
+import com.app.events.dto.EventStats;
+import com.app.events.dto.EventWithStats;
 import com.app.events.dto.RecentEvent;
+import com.app.events.dto.TimelineItem;
 import com.app.events.model.Event;
 import java.util.List;
 import java.util.Optional;
 
 public interface EventService {
     List<Event> getAllEvents();
+
+    List<EventWithStats> getAllEventsWithStats();
 
     Optional<Event> getEventById(String id);
 
@@ -17,4 +23,10 @@ public interface EventService {
     void deleteEvent(String id);
 
     List<RecentEvent> getRecentEvents(int limit);
+
+    EventStats getEventStats(String eventId);
+
+    List<TimelineItem> getEventTimeline(String eventId);
+
+    BudgetSummary getEventBudgetSummary(String eventId);
 }

@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
 
 @Service
@@ -43,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Email already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(user.getRole() == null ? "USER" : user.getRole());
+        user.setRole(user.getRole() == null ? Collections.singletonList("USER") : user.getRole());
         return userRepository.save(user);
     }
 }

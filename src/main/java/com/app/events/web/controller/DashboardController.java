@@ -1,12 +1,14 @@
-package com.app.events.controller;
+package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
 import com.app.events.dto.DashboardTask;
 import com.app.events.dto.RecentEvent;
+import com.app.events.repository.TaskRepositoryCustom;
 import com.app.events.service.EventService;
 import com.app.events.service.GuestService;
 import com.app.events.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,8 @@ public class DashboardController {
     private final EventService eventService;
     private final GuestService guestService;
     private final TaskService taskService;
+    @Autowired
+    private TaskRepositoryCustom taskRepositoryCustom;
 
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getOverview() {
@@ -29,6 +33,7 @@ public class DashboardController {
         overview.put("totalEvents", eventService.getAllEvents().size());
         overview.put("totalGuests", guestService.getAllGuests().size());
         overview.put("totalTasks", taskService.getAllTasks().size());
+        overview.put("completedTasks", taskRepositoryCustom.findByStatus("done").size());
         return ResponseEntity.ok(ApiResponse.success("Dashboard overview fetched", overview));
     }
 

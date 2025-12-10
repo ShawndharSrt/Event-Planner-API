@@ -1,4 +1,4 @@
-package com.app.events.controller;
+package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
 import com.app.events.model.Task;
@@ -23,9 +23,9 @@ public class TaskController {
         return ResponseEntity.ok(ApiResponse.success("Tasks fetched successfully", tasks));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Task>> getTaskById(@PathVariable String id) {
-        return taskService.getTaskById(id)
+    @GetMapping("/{eventId}")
+    public ResponseEntity<ApiResponse<Task>> getTaskById(@PathVariable String eventId) {
+        return taskService.getTaskById(eventId)
                 .map(task -> ResponseEntity.ok(ApiResponse.success("Task fetched successfully", task)))
                 .orElse(ResponseEntity.notFound().build());
     }

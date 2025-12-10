@@ -4,9 +4,10 @@ import com.app.events.model.Guest;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GuestRepository extends MongoRepository<Guest, String> {
-    List<Guest> findByEventId(String eventId);
+
+    Optional<Guest> findByGuestId(String id);
 }

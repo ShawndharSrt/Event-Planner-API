@@ -6,11 +6,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Document(collection = "guest")
-public class Guest extends BaseEntity {
+@Document(collection = "guestEvents")
+public class GuestsEvents extends BaseEntity{
+
+    private String eventId;
     private String guestId;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String phone;
+    private String group;
+    private String status;
+    private String dietary;
+    private String notes;
 }

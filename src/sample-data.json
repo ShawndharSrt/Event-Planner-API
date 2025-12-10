@@ -1,0 +1,238 @@
+{
+    "sequences": [
+        {
+            "_id": "user_sequence",
+            "seq": 2
+        }
+    ],
+    "users": [
+        {
+            "_id": {
+                "$oid": "6935695dfa72e718c4db6a9b"
+            },
+            "userId": "AB00001",
+            "email": "alice@example.com",
+            "password": "$2a$10$dXJ3SW6G7f5.1234567890",
+            "role": [
+                "ADMIN",
+                "PLANNER"
+            ],
+            "avatar": "https://ui-avatars.com/api/?name=Alice+Admin",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z",
+            "firstName": "Alice",
+            "lastName": "Madman"
+        },
+        {
+            "_id": {
+                "$oid": "6935695dfa72e718c4db6a9c"
+            },
+            "userId": "AB00002",
+            "email": "bob@example.com",
+            "password": "$2a$10$dXJ3SW6G7f5.0987654321",
+            "role": [
+                "USER"
+            ],
+            "avatar": "https://ui-avatars.com/api/?name=Bob+Planner",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z",
+            "firstName": "Bob",
+            "lastName": "Morley"
+        }
+    ],
+    "events": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0011",
+            "title": "Summer Wedding 2024",
+            "type": "WEDDING",
+            "status": "PLANNING",
+            "startDate": "2024-06-15",
+            "startTime": "14:00",
+            "endDate": "2024-06-15",
+            "endTime": "23:00",
+            "location": "Grand Hotel Ballroom",
+            "description": "A beautiful summer wedding for Sarah and Mike.",
+            "coverImage": "https://example.com/images/wedding_cover.jpg",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0012",
+            "title": "Tech Conference 2024",
+            "type": "CONFERENCE",
+            "status": "CONFIRMED",
+            "startDate": "2024-09-20",
+            "startTime": "09:00",
+            "endDate": "2024-09-22",
+            "endTime": "17:00",
+            "location": "Convention Center",
+            "description": "Annual tech innovators conference.",
+            "coverImage": "https://example.com/images/conf_cover.jpg",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ],
+    "guests": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0021",
+            "guestId": "G00001",
+            "firstName": "John",
+            "lastName": "Doe",
+            "email": "john.doe@example.com",
+            "phone": "+1234567890",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0022",
+            "guestId": "G00002",
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "email": "jane.smith@example.com",
+            "phone": "+1987654321",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0023",
+            "guestId": "G00003",
+            "firstName": "Tech",
+            "lastName": "Guru",
+            "email": "guru@tech.com",
+            "phone": "+1122334455",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ],
+    "guest_events": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0071",
+            "guestId": "650c1f1e1f1e1f1e1f1e0021",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "group": "Family",
+            "status": "CONFIRMED",
+            "dietary": "Vegetarian",
+            "notes": "Plus one",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0072",
+            "guestId": "650c1f1e1f1e1f1e1f1e0022",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "group": "Friends",
+            "status": "PENDING",
+            "dietary": "None",
+            "notes": "",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0073",
+            "guestId": "650c1f1e1f1e1f1e1f1e0023",
+            "eventId": "650c1f1e1f1e1f1e1f1e0012",
+            "group": "Speaker",
+            "status": "CONFIRMED",
+            "dietary": "Vegan",
+            "notes": "Keynote speaker",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ],
+    "tasks": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0031",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "title": "Book Photographer",
+            "description": "Research and book a wedding photographer.",
+            "assignee": "Alice Admin",
+            "dueDate": "2024-03-01",
+            "priority": "HIGH",
+            "status": "TODO",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0032",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "title": "Send Invitations",
+            "description": "Mail out physical invitations.",
+            "assignee": "Bob Planner",
+            "dueDate": "2024-04-15",
+            "priority": "MEDIUM",
+            "status": "IN_PROGRESS",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0033",
+            "eventId": "650c1f1e1f1e1f1e1f1e0012",
+            "title": "Venue Setup",
+            "description": "Arrange seating and AV equipment.",
+            "assignee": "Alice Admin",
+            "dueDate": "2024-09-19",
+            "priority": "HIGH",
+            "status": "TODO",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ],
+    "budgets": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0041",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "totalBudget": 20000.00,
+            "spent": 5000.00,
+            "notes": "Initial deposit for venue paid.",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0042",
+            "eventId": "650c1f1e1f1e1f1e1f1e0012",
+            "totalBudget": 50000.00,
+            "spent": 12000.00,
+            "notes": "Marketing and speaker fees.",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ],
+    "notifications": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0051",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "userId": "650c1f1e1f1e1f1e1f1e0002",
+            "message": "New task assigned: Send Invitations",
+            "read": false,
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0052",
+            "eventId": "650c1f1e1f1e1f1e1f1e0012",
+            "userId": "650c1f1e1f1e1f1e1f1e0001",
+            "message": "Budget limit approaching for Tech Conference",
+            "read": true,
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ],
+    "settings": [
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0061",
+            "userId": "650c1f1e1f1e1f1e1f1e0001",
+            "eventId": null,
+            "preferencesJson": "{\"theme\": \"dark\", \"notifications\": true}",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        },
+        {
+            "_id": "650c1f1e1f1e1f1e1f1e0062",
+            "userId": "650c1f1e1f1e1f1e1f1e0002",
+            "eventId": "650c1f1e1f1e1f1e1f1e0011",
+            "preferencesJson": "{\"reminderEmail\": true, \"digestFrequency\": \"weekly\"}",
+            "created_at": "2025-12-07T11:40:00.000Z",
+            "updated_at": "2025-12-07T11:40:00.000Z"
+        }
+    ]
+}

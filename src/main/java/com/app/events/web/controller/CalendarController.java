@@ -1,4 +1,4 @@
-package com.app.events.controller;
+package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
 import com.app.events.model.Event;

@@ -5,7 +5,6 @@ import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

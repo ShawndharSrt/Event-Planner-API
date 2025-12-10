@@ -1,4 +1,4 @@
-package com.app.events.controller;
+package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
 import com.app.events.model.Guest;
@@ -18,8 +18,8 @@ public class GuestController {
     private final GuestService guestService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Guest>>> getAllGuests(@RequestParam(required = false) String eventId) {
-        List<Guest> guests = (eventId != null) ? guestService.getGuestsByEventId(eventId) : guestService.getAllGuests();
+    public ResponseEntity<ApiResponse<List<Guest>>> getAllGuests() {
+        List<Guest> guests = guestService.getAllGuests();
         return ResponseEntity.ok(ApiResponse.success("Guests fetched successfully", guests));
     }
 
@@ -35,7 +35,7 @@ public class GuestController {
         return ResponseEntity.ok(ApiResponse.success("Guest created successfully", guestService.createGuest(guest)));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<Guest>> updateGuest(@PathVariable String id, @RequestBody Guest guest) {
         return ResponseEntity
                 .ok(ApiResponse.success("Guest updated successfully", guestService.updateGuest(id, guest)));

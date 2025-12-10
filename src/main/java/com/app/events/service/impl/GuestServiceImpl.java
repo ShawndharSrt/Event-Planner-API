@@ -1,6 +1,9 @@
 package com.app.events.service.impl;
 
+import com.app.events.dto.EventGuestResponse;
 import com.app.events.model.Guest;
+import com.app.events.model.GuestEvent;
+import com.app.events.repository.GuestEventRepository;
 import com.app.events.repository.GuestRepository;
 import com.app.events.service.GuestService;
 import lombok.RequiredArgsConstructor;
@@ -8,12 +11,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class GuestServiceImpl implements GuestService {
 
     private final GuestRepository guestRepository;
+    private final GuestEventRepository guestEventRepository;
 
     @Override
     public List<Guest> getAllGuests() {
@@ -21,8 +26,31 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
-    public List<Guest> getGuestsByEventId(String eventId) {
-        return guestRepository.findByEventId(eventId);
+    public List<EventGuestResponse> getEventGuestsByEventId(String eventId) {
+        // Get all guest-event relationships for this event
+        List<GuestEvent> guestEvents = guestEventRepository.findByEventId(eventId);
+
+        // For each relationship, fetch the guest details and combine
+        return guestEvents.stream()
+                .map(guestEvent -> {
+                    Optional<Guest> guestOpt = guestRepository.findByGuestId(guestEvent.getGuestId());
+                    if (guestOpt.isPresent()) {
+                        Guest guest = guestOpt.get();
+                        return new EventGuestResponse(
+                                guest.getGuestId(),
+                                guest.getFirstName(),
+                                guest.getLastName(),
+                                guest.getEmail(),
+                                guest.getPhone(),
+                                guestEvent.getGroup(),
+                                guestEvent.getStatus(),
+                                guestEvent.getDietary(),
+                                guestEvent.getNotes());
+                    }
+                    return null;
+                })
+                .filter(response -> response != null)
+                .collect(Collectors.toList());
     }
 
     @Override
