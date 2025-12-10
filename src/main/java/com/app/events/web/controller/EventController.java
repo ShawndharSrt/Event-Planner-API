@@ -3,7 +3,6 @@ package com.app.events.web.controller;
 import com.app.events.dto.*;
 import com.app.events.model.Event;
 import com.app.events.service.EventService;
-import com.app.events.service.GuestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,6 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
-    private final GuestService guestService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<EventWithStats>>> getAllEvents() {
@@ -51,9 +49,49 @@ public class EventController {
 
     @GetMapping("/{id}/guests")
     public ResponseEntity<ApiResponse<List<EventGuestResponse>>> getGuestsByEventId(@PathVariable String id) {
-        List<EventGuestResponse> s = guestService.getEventGuestsByEventId(id);
-        return ResponseEntity.ok(ApiResponse.success("Event guests fetched successfully",
-                guestService.getEventGuestsByEventId(id)));
+        return eventService.getEventById(id)
+                .map(event -> {
+                    List<EventGuestResponse> responses = event.getGuests().stream()
+                            .map(g -> {
+                                String[] names = g.getName() != null ? g.getName().split(" ", 2)
+                                        : new String[] { "", "" };
+                                return new EventGuestResponse(
+                                        g.getGuestId(),
+                                        names[0],
+                                        names.length > 1 ? names[1] : "",
+                                        g.getEmail(),
+                                        "", // Phone not captured in embedded object currently
+                                        g.getGroup(),
+                                        g.getStatus(),
+                                        g.getDietary(),
+                                        g.getNotes());
+                            })
+                            .toList();
+                    return ResponseEntity.ok(ApiResponse.success("Event guests fetched successfully", responses));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/{id}/guests")
+    public ResponseEntity<ApiResponse<Event>> addGuestToEvent(@PathVariable String id,
+            @RequestBody Event.EventGuest guest) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Guest added successfully", eventService.addGuestToEvent(id, guest)));
+    }
+
+    @DeleteMapping("/{id}/guests/{guestId}")
+    public ResponseEntity<ApiResponse<Event>> removeGuestFromEvent(@PathVariable String id,
+            @PathVariable String guestId) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Guest removed successfully", eventService.removeGuestFromEvent(id, guestId)));
+    }
+
+    @PatchMapping("/{id}/guests/{guestId}")
+    public ResponseEntity<ApiResponse<Event>> updateGuestStatus(@PathVariable String id, @PathVariable String guestId,
+            @RequestBody Event.EventGuest statusUpdate) {
+        // Assuming statusUpdate contains the new status in the 'status' field
+        return ResponseEntity.ok(ApiResponse.success("Guest status updated successfully",
+                eventService.updateGuestStatus(id, guestId, statusUpdate.getStatus())));
     }
 
     @GetMapping("/{id}/stats")

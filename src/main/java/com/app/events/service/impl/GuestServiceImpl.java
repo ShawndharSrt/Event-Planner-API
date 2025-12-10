@@ -2,12 +2,12 @@ package com.app.events.service.impl;
 
 import com.app.events.dto.EventGuestResponse;
 import com.app.events.model.Guest;
-import com.app.events.model.GuestEvent;
-import com.app.events.repository.GuestEventRepository;
 import com.app.events.repository.GuestRepository;
 import com.app.events.service.GuestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 public class GuestServiceImpl implements GuestService {
 
     private final GuestRepository guestRepository;
-    private final GuestEventRepository guestEventRepository;
 
     @Override
     public List<Guest> getAllGuests() {
@@ -27,30 +26,8 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public List<EventGuestResponse> getEventGuestsByEventId(String eventId) {
-        // Get all guest-event relationships for this event
-        List<GuestEvent> guestEvents = guestEventRepository.findByEventId(eventId);
-
-        // For each relationship, fetch the guest details and combine
-        return guestEvents.stream()
-                .map(guestEvent -> {
-                    Optional<Guest> guestOpt = guestRepository.findByGuestId(guestEvent.getGuestId());
-                    if (guestOpt.isPresent()) {
-                        Guest guest = guestOpt.get();
-                        return new EventGuestResponse(
-                                guest.getGuestId(),
-                                guest.getFirstName(),
-                                guest.getLastName(),
-                                guest.getEmail(),
-                                guest.getPhone(),
-                                guestEvent.getGroup(),
-                                guestEvent.getStatus(),
-                                guestEvent.getDietary(),
-                                guestEvent.getNotes());
-                    }
-                    return null;
-                })
-                .filter(response -> response != null)
-                .collect(Collectors.toList());
+        // This method is deprecated as guests are now embedded in the Event object
+        return List.of();
     }
 
     @Override
@@ -60,6 +37,9 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public Guest createGuest(Guest guest) {
+        LocalDateTime now = LocalDateTime.now();
+        guest.setCreatedAt(now);
+        guest.setUpdatedAt(now);
         return guestRepository.save(guest);
     }
 
@@ -67,6 +47,7 @@ public class GuestServiceImpl implements GuestService {
     public Guest updateGuest(String id, Guest guest) {
         if (guestRepository.existsById(id)) {
             guest.setId(id);
+            guest.setUpdatedAt(LocalDateTime.now());
             return guestRepository.save(guest);
         }
         throw new RuntimeException("Guest not found with id: " + id);

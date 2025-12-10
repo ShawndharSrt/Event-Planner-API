@@ -29,4 +29,10 @@ public interface EventService {
     List<TimelineItem> getEventTimeline(String eventId);
 
     BudgetSummary getEventBudgetSummary(String eventId);
+
+    Event addGuestToEvent(String eventId, Event.EventGuest guest);
+
+    Event removeGuestFromEvent(String eventId, String guestId);
+
+    Event updateGuestStatus(String eventId, String guestId, String status);
 }

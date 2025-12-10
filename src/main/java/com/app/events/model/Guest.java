@@ -13,4 +13,7 @@ public class Guest extends BaseEntity {
     private String lastName;
     private String email;
     private String phone;
+    private String group;
+    private String dietary;
+    private String notes;
 }

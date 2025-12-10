@@ -9,10 +9,8 @@ import com.app.events.mapper.EventWithStatsMapper;
 import com.app.events.mapper.RecentEventMapper;
 import com.app.events.model.Budget;
 import com.app.events.model.Event;
-import com.app.events.model.GuestEvent;
 import com.app.events.repository.BudgetRepository;
 import com.app.events.repository.EventRepository;
-import com.app.events.repository.GuestEventRepository;
 import com.app.events.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -29,7 +27,6 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final RecentEventMapper recentEventMapper;
     private final EventWithStatsMapper eventWithStatsMapper;
-    private final GuestEventRepository guestEventRepository;
     private final BudgetRepository budgetRepository;
 
     @Override
@@ -86,20 +83,52 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventStats getEventStats(String eventId) {
-        List<GuestEvent> guestEvents = guestEventRepository.findByEventId(eventId);
+        return eventRepository.findById(eventId)
+                .map(event -> {
+                    List<Event.EventGuest> guests = event.getGuests();
+                    int totalGuests = guests.size();
+                    int confirmed = (int) guests.stream()
+                            .filter(g -> "confirmed".equalsIgnoreCase(g.getStatus()))
+                            .count();
+                    int pending = (int) guests.stream()
+                            .filter(g -> "pending".equalsIgnoreCase(g.getStatus()))
+                            .count();
+                    int declined = (int) guests.stream()
+                            .filter(g -> "declined".equalsIgnoreCase(g.getStatus()))
+                            .count();
+                    return new EventStats(totalGuests, confirmed, pending, declined);
+                })
+                .orElse(new EventStats(0, 0, 0, 0));
+    }
 
-        int totalGuests = guestEvents.size();
-        int confirmed = (int) guestEvents.stream()
-                .filter(ge -> "confirmed".equalsIgnoreCase(ge.getStatus()))
-                .count();
-        int pending = (int) guestEvents.stream()
-                .filter(ge -> "pending".equalsIgnoreCase(ge.getStatus()))
-                .count();
-        int declined = (int) guestEvents.stream()
-                .filter(ge -> "declined".equalsIgnoreCase(ge.getStatus()))
-                .count();
+    @Override
+    public Event addGuestToEvent(String eventId, Event.EventGuest guest) {
+        Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+        // Check if guest already exists
+        boolean exists = event.getGuests().stream()
+                .anyMatch(g -> g.getGuestId().equals(guest.getGuestId()));
+        if (!exists) {
+            event.getGuests().add(guest);
+            return eventRepository.save(event);
+        }
+        return event;
+    }
 
-        return new EventStats(totalGuests, confirmed, pending, declined);
+    @Override
+    public Event removeGuestFromEvent(String eventId, String guestId) {
+        Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+        event.getGuests().removeIf(g -> g.getGuestId().equals(guestId));
+        return eventRepository.save(event);
+    }
+
+    @Override
+    public Event updateGuestStatus(String eventId, String guestId, String status) {
+        Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+        event.getGuests().stream()
+                .filter(g -> g.getGuestId().equals(guestId))
+                .findFirst()
+                .ifPresent(g -> g.setStatus(status));
+        return eventRepository.save(event);
     }
 
     @Override
