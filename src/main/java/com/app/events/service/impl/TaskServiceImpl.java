@@ -1,6 +1,7 @@
 package com.app.events.service.impl;
 
 import com.app.events.dto.DashboardTask;
+import com.app.events.dto.TaskUpdateRequest;
 import com.app.events.mapper.DashboardTaskMapper;
 import com.app.events.mapper.TaskMapper;
 import com.app.events.model.Task;
@@ -41,7 +42,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task updateTask(String id, com.app.events.dto.TaskUpdateRequest taskUpdateRequest) {
+    public Task updateTask(String id, TaskUpdateRequest taskUpdateRequest) {
         return taskRepository.findById(id).map(existingTask -> {
             taskMapper.updateTaskFromDto(taskUpdateRequest, existingTask);
             return taskRepository.save(existingTask);
