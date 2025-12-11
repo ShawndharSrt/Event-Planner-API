@@ -9,8 +9,10 @@ import com.app.events.mapper.EventWithStatsMapper;
 import com.app.events.mapper.RecentEventMapper;
 import com.app.events.model.Budget;
 import com.app.events.model.Event;
+import com.app.events.model.Guest;
 import com.app.events.repository.BudgetRepository;
 import com.app.events.repository.EventRepository;
+import com.app.events.repository.GuestRepository;
 import com.app.events.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -28,6 +30,7 @@ public class EventServiceImpl implements EventService {
     private final RecentEventMapper recentEventMapper;
     private final EventWithStatsMapper eventWithStatsMapper;
     private final BudgetRepository budgetRepository;
+    private final GuestRepository guestRepository;
 
     @Override
     public List<Event> getAllEvents() {
@@ -102,16 +105,40 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event addGuestToEvent(String eventId, Event.EventGuest guest) {
+    public Event addGuestsToEvent(String eventId, List<String> guestIds) {
         Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        // Check if guest already exists
-        boolean exists = event.getGuests().stream()
-                .anyMatch(g -> g.getGuestId().equals(guest.getGuestId()));
-        if (!exists) {
-            event.getGuests().add(guest);
-            return eventRepository.save(event);
+
+        if (guestIds == null || guestIds.isEmpty()) {
+            return event;
         }
-        return event;
+
+        List<Guest> guests = guestRepository.findAllById(guestIds);
+
+        for (Guest masterGuest : guests) {
+            Optional<Event.EventGuest> existingGuestOpt = event.getGuests().stream()
+                    .filter(g -> g.getGuestId().equals(masterGuest.getId()))
+                    .findFirst();
+
+            Event.EventGuest targetGuest;
+            if (existingGuestOpt.isPresent()) {
+                targetGuest = existingGuestOpt.get();
+            } else {
+                targetGuest = new Event.EventGuest();
+                targetGuest.setGuestId(masterGuest.getId());
+                targetGuest.setStatus("Pending");
+                event.getGuests().add(targetGuest);
+            }
+
+            // Sync/Hydrate fields from Master Guest
+            String fullName = (masterGuest.getFirstName() != null ? masterGuest.getFirstName() : "") + " " +
+                    (masterGuest.getLastName() != null ? masterGuest.getLastName() : "");
+            targetGuest.setName(fullName.trim());
+            targetGuest.setEmail(masterGuest.getEmail());
+            targetGuest.setGroup(masterGuest.getGroup());
+            targetGuest.setDietary(masterGuest.getDietary());
+            targetGuest.setNotes(masterGuest.getNotes());
+        }
+        return eventRepository.save(event);
     }
 
     @Override

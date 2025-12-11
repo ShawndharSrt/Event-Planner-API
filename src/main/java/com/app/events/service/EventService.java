@@ -30,7 +30,7 @@ public interface EventService {
 
     BudgetSummary getEventBudgetSummary(String eventId);
 
-    Event addGuestToEvent(String eventId, Event.EventGuest guest);
+    Event addGuestsToEvent(String eventId, List<String> guestIds);
 
     Event removeGuestFromEvent(String eventId, String guestId);
 

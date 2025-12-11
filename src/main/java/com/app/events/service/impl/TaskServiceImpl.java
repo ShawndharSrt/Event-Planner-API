@@ -2,6 +2,7 @@ package com.app.events.service.impl;
 
 import com.app.events.dto.DashboardTask;
 import com.app.events.mapper.DashboardTaskMapper;
+import com.app.events.mapper.TaskMapper;
 import com.app.events.model.Task;
 import com.app.events.repository.TaskRepository;
 import com.app.events.service.TaskService;
@@ -17,6 +18,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final DashboardTaskMapper dashboardTaskMapper;
+    private final TaskMapper taskMapper;
 
     @Override
     public List<Task> getAllTasks() {
@@ -39,12 +41,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task updateTask(String id, Task task) {
-        if (taskRepository.existsById(id)) {
-            task.setId(id);
-            return taskRepository.save(task);
-        }
-        throw new RuntimeException("Task not found with id: " + id);
+    public Task updateTask(String id, com.app.events.dto.TaskUpdateRequest taskUpdateRequest) {
+        return taskRepository.findById(id).map(existingTask -> {
+            taskMapper.updateTaskFromDto(taskUpdateRequest, existingTask);
+            return taskRepository.save(existingTask);
+        }).orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
 
     @Override

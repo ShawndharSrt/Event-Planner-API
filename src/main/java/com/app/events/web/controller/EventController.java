@@ -73,10 +73,11 @@ public class EventController {
     }
 
     @PostMapping("/{id}/guests")
-    public ResponseEntity<ApiResponse<Event>> addGuestToEvent(@PathVariable String id,
-            @RequestBody Event.EventGuest guest) {
+    public ResponseEntity<ApiResponse<Event>> addGuestsToEvent(@PathVariable String id,
+            @RequestBody AddGuestsRequest request) {
         return ResponseEntity
-                .ok(ApiResponse.success("Guest added successfully", eventService.addGuestToEvent(id, guest)));
+                .ok(ApiResponse.success("Guests added successfully",
+                        eventService.addGuestsToEvent(id, request.getGuestIds())));
     }
 
     @DeleteMapping("/{id}/guests/{guestId}")

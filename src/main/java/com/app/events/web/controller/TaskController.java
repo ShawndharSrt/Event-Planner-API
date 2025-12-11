@@ -1,6 +1,7 @@
 package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
+import com.app.events.dto.TaskUpdateRequest;
 import com.app.events.model.Task;
 import com.app.events.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +36,11 @@ public class TaskController {
         return ResponseEntity.ok(ApiResponse.success("Task created successfully", taskService.createTask(task)));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Task>> updateTask(@PathVariable String id, @RequestBody Task task) {
-        return ResponseEntity.ok(ApiResponse.success("Task updated successfully", taskService.updateTask(id, task)));
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<Task>> updateTask(@PathVariable String id,
+            @RequestBody TaskUpdateRequest taskUpdateRequest) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Task updated successfully", taskService.updateTask(id, taskUpdateRequest)));
     }
 
     @DeleteMapping("/{id}")
