@@ -20,9 +20,8 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<Notification>>> getNotifications(
             @RequestParam(required = false) String userId, @RequestParam(required = false) String eventId) {
-        List<Notification> result = (eventId != null) ?
-            notificationService.getNotificationsByEvent(eventId) :
-            notificationService.getNotificationsByUser(userId);
+        List<Notification> result = (eventId != null) ? notificationService.getNotificationsByEvent(eventId)
+                : notificationService.getNotificationsByUser(userId);
         return ResponseEntity.ok(ApiResponse.success("Notifications fetched", result));
     }
 

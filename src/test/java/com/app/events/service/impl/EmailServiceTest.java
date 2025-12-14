@@ -31,8 +31,8 @@ class EmailServiceTest {
     @Test
     void sendSimpleMessage_shouldSendEmail() {
         // Given
-        ReflectionTestUtils.setField(emailService, "fromEmail", "test@example.com");
-        String to = "recipient@example.com";
+        ReflectionTestUtils.setField(emailService, "fromEmail", "b.p.shawndharsrt10@gmail.com");
+        String to = "b.p.shawndharsrt10@gmail.com";
         String subject = "Test Subject";
         String text = "Test Body";
 

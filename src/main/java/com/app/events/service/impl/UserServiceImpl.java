@@ -16,6 +16,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final SequenceGeneratorService sequenceGeneratorService;
+    private final com.app.events.service.EmailService emailService;
 
     @Override
     public List<User> getAllUsers() {
@@ -40,7 +41,18 @@ public class UserServiceImpl implements UserService {
         user.setUserId(userId);
 
         // TODO: Encode password
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Send welcome email
+        if (savedUser.getEmail() != null) {
+            emailService.sendSimpleMessage(
+                    savedUser.getEmail(),
+                    "Welcome to Event Planner",
+                    "Hello " + savedUser.getFirstName() + ",\n\nWelcome to our platform! Your User ID is "
+                            + savedUser.getUserId());
+        }
+
+        return savedUser;
     }
 
     @Override
