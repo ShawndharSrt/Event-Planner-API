@@ -1,5 +1,6 @@
 package com.app.events.service;
 
+import com.app.events.dto.UserStats;
 import com.app.events.model.User;
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,6 @@ public interface UserService {
     User updateUser(String id, User user);
 
     void deleteUser(String id);
+
+    UserStats getUserStats(String userId);
 }

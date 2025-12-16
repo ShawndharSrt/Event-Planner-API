@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface GuestRepository extends MongoRepository<Guest, String> {
 
     Optional<Guest> findByGuestId(String id);
+
+    long countByCreatedBy(String userId);
 }

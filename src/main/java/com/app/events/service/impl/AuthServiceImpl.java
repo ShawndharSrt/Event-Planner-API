@@ -25,12 +25,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String login(String email, String password) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
         return Jwts.builder()
-                .setSubject(user.getId())
+                .setSubject(user.getUserId()) // Use business userId (AB00002) not MongoDB _id
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))

@@ -15,4 +15,6 @@ public interface NotificationRepository extends MongoRepository<Notification, St
     boolean existsByEventIdAndCodeAndReadFalse(String eventId, String code);
 
     List<Notification> findByEventIdAndCodeAndReadFalse(String eventId, String code);
+
+    List<Notification> findByUserIdAndReadFalse(String userId);
 }

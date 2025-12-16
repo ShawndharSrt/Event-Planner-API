@@ -1,6 +1,10 @@
 package com.app.events.service.impl;
 
+import com.app.events.dto.UserStats;
 import com.app.events.model.User;
+import com.app.events.repository.EventRepository;
+import com.app.events.repository.GuestRepository;
+import com.app.events.repository.TaskRepository;
 import com.app.events.repository.UserRepository;
 import com.app.events.service.SequenceGeneratorService;
 import com.app.events.service.UserService;
@@ -17,6 +21,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final com.app.events.service.EmailService emailService;
+    private final EventRepository eventRepository;
+    private final TaskRepository taskRepository;
+    private final GuestRepository guestRepository;
 
     @Override
     public List<User> getAllUsers() {
@@ -68,5 +75,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public UserStats getUserStats(String userId) {
+        long eventsCreated = eventRepository.countByCreatedBy(userId);
+        long tasksCompleted = taskRepository.countByCreatedByAndStatus(userId, "COMPLETED");
+        long guestsManaged = guestRepository.countByCreatedBy(userId);
+
+        return new UserStats(eventsCreated, tasksCompleted, guestsManaged);
     }
 }

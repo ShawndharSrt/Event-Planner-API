@@ -1,10 +1,12 @@
 package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
+import com.app.events.dto.UserStats;
 import com.app.events.model.User;
 import com.app.events.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,5 +45,13 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+    }
+
+    @GetMapping("/me/stats")
+    public ResponseEntity<ApiResponse<UserStats>> getUserStats() {
+        // Extract user ID from security context (set by JWT authentication filter)
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserStats stats = userService.getUserStats(userId);
+        return ResponseEntity.ok(ApiResponse.success("User stats fetched successfully", stats));
     }
 }

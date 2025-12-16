@@ -5,9 +5,11 @@ import com.app.events.model.Notification;
 import com.app.events.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -25,9 +27,17 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.success("Notifications fetched", result));
     }
 
-    @PutMapping("/{id}/read")
+    @PatchMapping("/{id}/read")
     public ResponseEntity<ApiResponse<Notification>> markAsRead(@PathVariable String id) {
         Notification notification = notificationService.markAsRead(id);
         return ResponseEntity.ok(ApiResponse.success("Notification marked as read", notification));
+    }
+
+    @PatchMapping("/mark-all-read")
+    public ResponseEntity<ApiResponse<Map<String, Integer>>> markAllAsRead() {
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        int updatedCount = notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok(ApiResponse.success("All notifications marked as read",
+                Map.of("updatedCount", updatedCount)));
     }
 }

@@ -60,4 +60,20 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setClosedAt(LocalDateTime.now());
         notificationRepository.save(notification);
     }
+
+    @Override
+    public int markAllAsRead(String userId) {
+        List<Notification> unreadNotifications = notificationRepository.findByUserIdAndReadFalse(userId);
+        LocalDateTime now = LocalDateTime.now();
+
+        unreadNotifications.forEach(notification -> {
+            notification.setRead(true);
+            if (notification.getClosedAt() == null) {
+                notification.setClosedAt(now);
+            }
+        });
+
+        notificationRepository.saveAll(unreadNotifications);
+        return unreadNotifications.size();
+    }
 }

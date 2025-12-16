@@ -21,4 +21,7 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Field("updated_at")
     private LocalDateTime updatedAt;
+
+    @Field("created_by")
+    private String createdBy; // User ID who created this entity
 }

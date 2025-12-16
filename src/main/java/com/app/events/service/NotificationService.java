@@ -16,4 +16,6 @@ public interface NotificationService {
             String messageSuffix);
 
     void closeAlert(String alertId);
+
+    int markAllAsRead(String userId);
 }
