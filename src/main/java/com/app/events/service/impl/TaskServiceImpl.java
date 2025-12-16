@@ -5,7 +5,9 @@ import com.app.events.dto.TaskUpdateRequest;
 import com.app.events.mapper.DashboardTaskMapper;
 import com.app.events.mapper.TaskMapper;
 import com.app.events.model.Task;
+import com.app.events.model.enums.AlertCode;
 import com.app.events.repository.TaskRepository;
+import com.app.events.service.NotificationService;
 import com.app.events.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final DashboardTaskMapper dashboardTaskMapper;
     private final TaskMapper taskMapper;
+    private final NotificationService notificationService;
 
     @Override
     public List<Task> getAllTasks() {
@@ -44,8 +47,19 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public Task updateTask(String id, TaskUpdateRequest taskUpdateRequest) {
         return taskRepository.findById(id).map(existingTask -> {
+            String oldStatus = existingTask.getStatus();
             taskMapper.updateTaskFromDto(taskUpdateRequest, existingTask);
-            return taskRepository.save(existingTask);
+            Task saved = taskRepository.save(existingTask);
+
+            // Check for TCA (Task Completed Alert)
+            if (!"completed".equalsIgnoreCase(oldStatus) && "completed".equalsIgnoreCase(saved.getStatus())) {
+                // Prevent duplicate online alert if strictly required, but "completed" happens
+                // once usually.
+                // For stricter logic we could check existing alerts.
+                notificationService.createAlert(AlertCode.TCA,
+                        null, saved.getEventId(), ": " + saved.getTitle());
+            }
+            return saved;
         }).orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
     }
 

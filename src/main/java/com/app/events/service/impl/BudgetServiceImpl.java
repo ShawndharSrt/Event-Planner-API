@@ -8,9 +8,14 @@ import com.app.events.mapper.EventBudgetMapper;
 import com.app.events.model.BudgetCategory;
 import com.app.events.model.EventBudget;
 import com.app.events.model.Expense;
+import com.app.events.model.Notification;
+import com.app.events.model.enums.AlertCode;
 import com.app.events.repository.EventBudgetRepository;
 import com.app.events.repository.ExpenseRepository;
+import com.app.events.repository.NotificationRepository;
 import com.app.events.service.BudgetService;
+import com.app.events.service.NotificationService;
+
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -27,8 +32,63 @@ import java.util.stream.Collectors;
 public class BudgetServiceImpl implements BudgetService {
     private final EventBudgetRepository eventBudgetRepository;
     private final ExpenseRepository expenseRepository;
+    private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
     private final MongoTemplate mongoTemplate;
     private final EventBudgetMapper eventBudgetMapper;
+
+    // Extracted internal method to reuse if needed or just keep original structure.
+    // Actually, sticking to original structure and adding checkBudgetAlerts helper
+    // is cleaner.
+    // Reverting getBudgetSummaryByEventId change above to keep it simple, just
+    // injecting deps and adding helper.
+    // See below for checkBudgetAlerts and calls.
+
+    private void checkBudgetAlerts(String eventId) {
+        Optional<EventBudget> budgetOpt = eventBudgetRepository.findByEventId(eventId);
+        if (budgetOpt.isEmpty())
+            return;
+        EventBudget budget = budgetOpt.get();
+
+        Map<String, Double> categorySpentMap = calculateSpentByCategoryForEvent(eventId);
+        double totalSpent = categorySpentMap.values().stream().mapToDouble(Double::doubleValue).sum();
+        double totalBudget = budget.getTotalBudget();
+
+        if (totalBudget > 0) {
+            // B1EA: >= 100%
+            if (totalSpent >= totalBudget) {
+                if (!notificationRepository.existsByEventIdAndCodeAndReadFalse(eventId,
+                        AlertCode.B1EA.getCode())) {
+                    notificationService.createAlert(AlertCode.B1EA, null, eventId,
+                            String.format("Spent: %.2f / %.2f", totalSpent, totalBudget));
+                }
+            } else {
+                // Resolve B1EA if exists
+                List<Notification> alerts = notificationRepository
+                        .findByEventIdAndCodeAndReadFalse(eventId, AlertCode.B1EA.getCode());
+                alerts.forEach(a -> notificationService.closeAlert(a.getId()));
+            }
+
+            // BOVA: > 100% (Let's say meaningful overrun, but strict requirement is type
+            // BOVA)
+            // If we treat BOVA as same condition as B1EA but Critical, maybe just trigger
+            // both?
+            // Or BOVA when > 100% (Strictly >). B1EA when == 100%?
+            // Usually "100% Exceed" means >= 100%. "Overrun" means > 100%.
+            if (totalSpent > totalBudget) {
+                if (!notificationRepository.existsByEventIdAndCodeAndReadFalse(eventId,
+                        AlertCode.BOVA.getCode())) {
+                    notificationService.createAlert(AlertCode.BOVA, null, eventId,
+                            String.format("Overrun by %.2f", totalSpent - totalBudget));
+                }
+            } else {
+                // Resolve BOVA
+                List<Notification> alerts = notificationRepository
+                        .findByEventIdAndCodeAndReadFalse(eventId, AlertCode.BOVA.getCode());
+                alerts.forEach(a -> notificationService.closeAlert(a.getId()));
+            }
+        }
+    }
 
     @Override
     public BudgetSummary getBudgetSummaryByEventId(String eventId) {
@@ -77,12 +137,16 @@ public class BudgetServiceImpl implements BudgetService {
         if (existing.isPresent()) {
             EventBudget b = existing.get();
             eventBudgetMapper.updateBudgetFromDto(budgetUpdates, b);
-            return eventBudgetRepository.save(b);
+            EventBudget saved = eventBudgetRepository.save(b);
+            checkBudgetAlerts(eventId);
+            return saved;
         }
 
         EventBudget newBudget = eventBudgetMapper.toEntity(budgetUpdates);
         newBudget.setEventId(eventId);
-        return eventBudgetRepository.save(newBudget);
+        EventBudget saved = eventBudgetRepository.save(newBudget);
+        checkBudgetAlerts(eventId);
+        return saved;
     }
 
     @Override
@@ -140,7 +204,12 @@ public class BudgetServiceImpl implements BudgetService {
     @Override
     public void deleteExpense(String id) {
         // Simply delete the expense - spent amount will be recalculated via aggregation
+        Expense e = expenseRepository.findById(id).orElse(null);
+        String eventId = e != null ? e.getEventId() : null;
         expenseRepository.deleteById(id);
+        if (eventId != null) {
+            checkBudgetAlerts(eventId);
+        }
     }
 
     @Override

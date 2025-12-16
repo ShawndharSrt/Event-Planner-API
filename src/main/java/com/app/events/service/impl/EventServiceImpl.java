@@ -9,10 +9,13 @@ import com.app.events.mapper.EventWithStatsMapper;
 import com.app.events.mapper.RecentEventMapper;
 import com.app.events.model.Event;
 import com.app.events.model.Guest;
+import com.app.events.model.enums.AlertCode;
 import com.app.events.repository.EventRepository;
 import com.app.events.repository.GuestRepository;
 import com.app.events.service.BudgetService;
 import com.app.events.service.EventService;
+import com.app.events.service.NotificationService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class EventServiceImpl implements EventService {
     private final EventWithStatsMapper eventWithStatsMapper;
     private final BudgetService budgetService;
     private final GuestRepository guestRepository;
+    private final NotificationService notificationService;
 
     @Override
     public List<Event> getAllEvents() {
@@ -137,7 +141,15 @@ public class EventServiceImpl implements EventService {
             targetGuest.setDietary(masterGuest.getDietary());
             targetGuest.setNotes(masterGuest.getNotes());
         }
-        return eventRepository.save(event);
+        Event saved = eventRepository.save(event);
+        // Alert EITA: "Invitation Triggered Alert" for added guests
+        if (!guestIds.isEmpty()) {
+            // We could check if guests were actually added (vs existing), but for MVP just
+            // alert on action.
+            notificationService.createAlert(AlertCode.EITA, null, eventId,
+                    "(" + guestIds.size() + " guests invited)");
+        }
+        return saved;
     }
 
     @Override

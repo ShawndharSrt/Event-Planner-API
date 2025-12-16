@@ -14,4 +14,6 @@ public interface ExpenseRepository extends MongoRepository<Expense, String> {
     List<Expense> findByEventIdAndCategoryId(String eventId, ObjectId categoryId);
 
     void deleteByEventId(String eventId);
+
+    List<Expense> findByStatus(String status);
 }

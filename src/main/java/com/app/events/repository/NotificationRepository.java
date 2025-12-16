@@ -7,6 +7,12 @@ import java.util.List;
 
 public interface NotificationRepository extends MongoRepository<Notification, String> {
     List<Notification> findByUserId(String userId);
-    List<Notification> findByEventId(String eventId);
-}
 
+    List<Notification> findByEventId(String eventId);
+
+    boolean existsByUserIdAndCodeAndReadFalse(String userId, String code);
+
+    boolean existsByEventIdAndCodeAndReadFalse(String eventId, String code);
+
+    List<Notification> findByEventIdAndCodeAndReadFalse(String eventId, String code);
+}
