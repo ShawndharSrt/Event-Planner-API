@@ -1,13 +1,13 @@
 package com.app.events.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class BudgetCategory {
-    private String id;
+public class BudgetCategory extends BaseEntity {
     private String name;
     private double allocatedAmount;
-    private double spentAmount;
     private String color;
     private String icon;
 }

@@ -7,12 +7,11 @@ import com.app.events.dto.RecentEvent;
 import com.app.events.dto.TimelineItem;
 import com.app.events.mapper.EventWithStatsMapper;
 import com.app.events.mapper.RecentEventMapper;
-import com.app.events.model.Budget;
 import com.app.events.model.Event;
 import com.app.events.model.Guest;
-import com.app.events.repository.BudgetRepository;
 import com.app.events.repository.EventRepository;
 import com.app.events.repository.GuestRepository;
+import com.app.events.service.BudgetService;
 import com.app.events.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -29,7 +28,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final RecentEventMapper recentEventMapper;
     private final EventWithStatsMapper eventWithStatsMapper;
-    private final BudgetRepository budgetRepository;
+    private final BudgetService budgetService;
     private final GuestRepository guestRepository;
 
     @Override
@@ -185,14 +184,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public BudgetSummary getEventBudgetSummary(String eventId) {
-        Optional<Budget> budgetOpt = budgetRepository.findByEventId(eventId);
-
-        if (budgetOpt.isPresent()) {
-            Budget budget = budgetOpt.get();
-            return new BudgetSummary(budget.getTotalBudget(), budget.getSpent());
+        try {
+            return budgetService.getBudgetSummaryByEventId(eventId);
+        } catch (RuntimeException e) {
+            // Return empty summary if no budget exists
+            return new BudgetSummary(null, eventId, 0.0, 0.0, "USD", java.util.Collections.emptyList());
         }
-
-        // Return zero values if no budget exists
-        return new BudgetSummary(0.0, 0.0);
     }
 }

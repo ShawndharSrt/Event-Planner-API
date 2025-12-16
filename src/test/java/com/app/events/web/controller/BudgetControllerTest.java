@@ -1,9 +1,12 @@
 package com.app.events.web.controller;
 
 import com.app.events.config.MongoConfig;
-import com.app.events.dto.ApiResponse;
-import com.app.events.model.Budget;
-import com.app.events.model.BudgetCategory;
+import com.app.events.dto.BudgetSummary;
+import com.app.events.dto.CategorySpentSummary;
+import com.app.events.dto.BudgetSummary;
+import com.app.events.dto.BudgetUpdateRequest;
+import com.app.events.dto.CategorySpentSummary;
+import com.app.events.model.EventBudget;
 import com.app.events.model.Expense;
 import com.app.events.service.BudgetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +22,9 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,111 +35,126 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = BudgetController.class, excludeAutoConfiguration = {
-        SecurityAutoConfiguration.class,
-        SecurityFilterAutoConfiguration.class
+                SecurityAutoConfiguration.class,
+                SecurityFilterAutoConfiguration.class
 }, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = MongoConfig.class))
 class BudgetControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockBean
-    private BudgetService budgetService;
+        @MockBean
+        private BudgetService budgetService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    private Budget budget;
-    private Expense expense;
+        private EventBudget eventBudget;
+        private BudgetSummary budgetSummary;
+        private Expense expense;
 
-    @BeforeEach
-    void setUp() {
-        budget = new Budget();
-        budget.setId("bdg-1");
-        budget.setEventId("evt-1");
-        budget.setTotalBudget(10000.0);
-        budget.setCurrency("USD");
+        @BeforeEach
+        void setUp() {
+                eventBudget = new EventBudget();
+                eventBudget.setId("bdg-1");
+                eventBudget.setEventId("evt-1");
+                eventBudget.setTotalBudget(10000.0);
+                eventBudget.setCurrency("USD");
 
-        expense = new Expense();
-        expense.setId("exp-1");
-        expense.setAmount(100.0);
-        expense.setDescription("Decor");
-        expense.setEventId("evt-1");
-    }
+                CategorySpentSummary categorySummary = new CategorySpentSummary(
+                                "1",
+                                "Venue",
+                                5000.0,
+                                1500.0,
+                                "#FF5733",
+                                "venue");
 
-    @Test
-    void getBudget_shouldReturnBudget() throws Exception {
-        when(budgetService.getBudgetByEventId("evt-1")).thenReturn(Optional.of(budget));
+                budgetSummary = new BudgetSummary(
+                                "bdg-1",
+                                "evt-1",
+                                10000.0,
+                                1500.0,
+                                "USD",
+                                List.of(categorySummary));
 
-        mockMvc.perform(get("/api/budget/evt-1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value("bdg-1"));
-    }
+                expense = new Expense();
+                expense.setId("exp-1");
+                expense.setAmount(100.0);
+                expense.setDescription("Decor");
+                expense.setEventId("evt-1");
+                expense.setCategoryId("1");
+                expense.setDate(new Date());
+                expense.setStatus("paid");
+        }
 
-    @Test
-    void getBudget_shouldReturnNoBudgetFound_whenBudgetDoesNotExist() throws Exception {
-        // Controller returns "success" with null data in this case
-        when(budgetService.getBudgetByEventId("evt-999")).thenReturn(Optional.empty());
+        @Test
+        void getBudget_shouldReturnBudgetSummary() throws Exception {
+                when(budgetService.getBudgetSummaryByEventId("evt-1")).thenReturn(budgetSummary);
 
-        mockMvc.perform(get("/api/budget/evt-999"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isEmpty())
-                .andExpect(jsonPath("$.message").value("No budget found"));
-    }
+                mockMvc.perform(get("/api/budget/evt-1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data.id").value("bdg-1"))
+                                .andExpect(jsonPath("$.data.totalBudget").value(10000.0))
+                                .andExpect(jsonPath("$.data.totalSpent").value(1500.0));
+        }
 
-    @Test
-    void updateBudget_shouldReturnUpdatedBudget() throws Exception {
-        when(budgetService.upsertBudget(eq("evt-1"), any(Budget.class))).thenReturn(budget);
+        @Test
+        void updateBudget_shouldReturnUpdatedBudget() throws Exception {
+                // Return existing eventBudget when upsert is called
+                when(budgetService.upsertBudget(eq("evt-1"), any(BudgetUpdateRequest.class))).thenReturn(eventBudget);
 
-        mockMvc.perform(put("/api/budget/evt-1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(budget)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value("bdg-1"));
-    }
+                // Create update request DTO
+                BudgetUpdateRequest updateRequest = new BudgetUpdateRequest();
+                updateRequest.setTotalBudget(10000.0);
+                updateRequest.setCurrency("USD");
 
-    @Test
-    void addExpense_shouldReturnAddedExpense() throws Exception {
-        when(budgetService.addExpense(any(Expense.class))).thenReturn(expense);
+                mockMvc.perform(patch("/api/budget/evt-1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateRequest)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data.id").value("bdg-1"));
+        }
 
-        mockMvc.perform(post("/api/budget/evt-1/expenses")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(expense)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.id").value("exp-1"));
-    }
+        @Test
+        void getExpenses_shouldReturnExpensesList() throws Exception {
+                List<Expense> expenses = List.of(expense);
+                when(budgetService.getExpensesByEventId("evt-1")).thenReturn(expenses);
 
-    @Test
-    void updateExpense_shouldReturnUpdatedExpense() throws Exception {
-        expense.setDescription("Updated Decor");
-        when(budgetService.updateExpense(eq("exp-1"), any(Expense.class))).thenReturn(expense);
+                mockMvc.perform(get("/api/budget/evt-1/expenses"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data[0].id").value("exp-1"))
+                                .andExpect(jsonPath("$.data[0].description").value("Decor"));
+        }
 
-        mockMvc.perform(patch("/api/budget/exp-1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(expense)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.description").value("Updated Decor"));
-    }
+        @Test
+        void addExpense_shouldReturnAddedExpense() throws Exception {
+                when(budgetService.addExpense(any(Expense.class))).thenReturn(expense);
 
-    @Test
-    void deleteExpense_shouldReturnSuccess() throws Exception {
-        doNothing().when(budgetService).deleteExpense("exp-1");
+                mockMvc.perform(post("/api/budget/evt-1/expenses")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(expense)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data.id").value("exp-1"));
+        }
 
-        mockMvc.perform(delete("/api/budget/exp-1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Expense deleted"));
-    }
+        @Test
+        void updateExpense_shouldReturnUpdatedExpense() throws Exception {
+                expense.setDescription("Updated Decor");
+                when(budgetService.updateExpense(eq("exp-1"), any(Expense.class))).thenReturn(expense);
 
-    @Test
-    void getCategoryById_shouldReturnCategory() throws Exception {
-        BudgetCategory category = new BudgetCategory();
-        category.setId("cat-1");
-        category.setName("Venue");
+                mockMvc.perform(patch("/api/budget/expenses/exp-1")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(expense)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.data.description").value("Updated Decor"));
+        }
 
-        when(budgetService.getCategoryById("cat-1")).thenReturn(Optional.of(category));
+        @Test
+        void deleteExpense_shouldReturnSuccess() throws Exception {
+                doNothing().when(budgetService).deleteExpense("exp-1");
 
-        mockMvc.perform(get("/api/budget/budget-categories/cat-1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Venue"));
-    }
+                mockMvc.perform(delete("/api/budget/expenses/exp-1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.message").value("Expense deleted"));
+        }
 }
