@@ -92,8 +92,13 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public BudgetSummary getBudgetSummaryByEventId(String eventId) {
-        EventBudget budget = eventBudgetRepository.findByEventId(eventId)
-                .orElseThrow(() -> new RuntimeException("Budget not found for event: " + eventId));
+        Optional<EventBudget> budgetOpt = eventBudgetRepository.findByEventId(eventId);
+
+        if (budgetOpt.isEmpty()) {
+            return new BudgetSummary(null, eventId, 0.0, 0.0, null, Collections.emptyList());
+        }
+
+        EventBudget budget = budgetOpt.get();
 
         // Calculate spent amounts using aggregation
         Map<String, Double> categorySpentMap = calculateSpentByCategoryForEvent(eventId);
@@ -133,18 +138,26 @@ public class BudgetServiceImpl implements BudgetService {
     @Override
     public EventBudget upsertBudget(String eventId, BudgetUpdateRequest budgetUpdates) {
         Optional<EventBudget> existing = eventBudgetRepository.findByEventId(eventId);
+        EventBudget budget;
 
         if (existing.isPresent()) {
-            EventBudget b = existing.get();
-            eventBudgetMapper.updateBudgetFromDto(budgetUpdates, b);
-            EventBudget saved = eventBudgetRepository.save(b);
-            checkBudgetAlerts(eventId);
-            return saved;
+            budget = existing.get();
+            eventBudgetMapper.updateBudgetFromDto(budgetUpdates, budget);
+        } else {
+            budget = eventBudgetMapper.toEntity(budgetUpdates);
+            budget.setEventId(eventId);
         }
 
-        EventBudget newBudget = eventBudgetMapper.toEntity(budgetUpdates);
-        newBudget.setEventId(eventId);
-        EventBudget saved = eventBudgetRepository.save(newBudget);
+        // Ensure all categories have IDs
+        if (budget.getCategories() != null) {
+            budget.getCategories().forEach(category -> {
+                if (category.getId() == null || category.getId().isEmpty()) {
+                    category.setId(new ObjectId().toString());
+                }
+            });
+        }
+
+        EventBudget saved = eventBudgetRepository.save(budget);
         checkBudgetAlerts(eventId);
         return saved;
     }

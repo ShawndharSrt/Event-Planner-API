@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid email or password");
         }
         return Jwts.builder()
-                .setSubject(user.getUserId()) // Use business userId (AB00002) not MongoDB _id
+                .setSubject(user.getUserId())
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
