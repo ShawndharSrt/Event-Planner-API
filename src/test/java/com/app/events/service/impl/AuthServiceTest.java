@@ -9,7 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -25,34 +24,48 @@ class AuthServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @Mock
+    private com.app.events.config.JwtUtil jwtUtil;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
     private User user;
-    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     @BeforeEach
     void setUp() {
         user = new User();
         user.setId("usr-1");
         user.setEmail("test@example.com");
-        user.setPassword(encoder.encode("password123")); // Store encoded password
+        user.setPassword("encoded_password");
+        user.setFirstName("John");
+        user.setLastName("Doe");
         user.setRole(Collections.singletonList("USER"));
     }
 
     @Test
     void login_shouldReturnToken_whenCredentialsAreValid() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", "encoded_password")).thenReturn(true);
+        when(jwtUtil.generateToken("usr-1", "test@example.com", Collections.singletonList("USER")))
+                .thenReturn("mock-token");
+        when(jwtUtil.getExpirationDateFromToken("mock-token")).thenReturn(new java.util.Date());
 
-        String token = authService.login("test@example.com", "password123");
+        com.app.events.dto.LoginResponse response = authService.login("test@example.com", "password123");
 
-        assertNotNull(token);
-        assertFalse(token.isEmpty());
+        assertNotNull(response);
+        assertEquals("mock-token", response.getToken());
+        assertEquals("John", response.getUser().getFirstName());
+        assertEquals("Doe", response.getUser().getLastName());
     }
 
     @Test
     void login_shouldThrowException_whenPasswordIsInvalid() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpassword", "encoded_password")).thenReturn(false);
 
         assertThrows(RuntimeException.class, () -> authService.login("test@example.com", "wrongpassword"));
     }
@@ -68,6 +81,7 @@ class AuthServiceTest {
     void register_shouldSaveUser() {
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(passwordEncoder.encode("password123")).thenReturn("encoded_password_new");
 
         User newUser = new User();
         newUser.setEmail("test@example.com");
@@ -77,7 +91,7 @@ class AuthServiceTest {
 
         assertNotNull(registered);
         assertEquals("test@example.com", registered.getEmail());
-        assertNotEquals("password123", registered.getPassword()); // Should be encoded
+        assertEquals("encoded_password_new", registered.getPassword());
         verify(userRepository).save(any(User.class));
     }
 

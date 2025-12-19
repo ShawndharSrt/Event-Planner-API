@@ -28,4 +28,16 @@ public class SequenceGeneratorServiceImpl implements SequenceGeneratorService {
                 Sequence.class);
         return !Objects.isNull(counter) ? counter.getSeq() : 1;
     }
+
+    @Override
+    public void syncSequence(String seqName, long minValue) {
+        // Use $max to only update if minValue is greater than current value
+        // This avoids DuplicateKeyException occurring when query fail to match due to
+        // seq >= minValue
+        mongoOperations.findAndModify(
+                query(where("_id").is(seqName)),
+                new Update().max("seq", minValue),
+                options().upsert(true),
+                Sequence.class);
+    }
 }

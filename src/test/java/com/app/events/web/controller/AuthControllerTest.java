@@ -53,13 +53,21 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturnToken() throws Exception {
-        when(authService.login("test@example.com", "password123")).thenReturn("mock-jwt-token");
+        com.app.events.dto.LoginResponse mockResponse = new com.app.events.dto.LoginResponse(
+                "mock-jwt-token",
+                new java.util.Date(),
+                new com.app.events.dto.LoginResponse.UserResponse("usr-1", "John", "Doe", "test@example.com",
+                        Collections.singletonList("USER")));
+        when(authService.login("test@example.com", "password123")).thenReturn(mockResponse);
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.data.token").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.data.user.email").value("test@example.com"))
+                .andExpect(jsonPath("$.data.user.firstName").value("John"))
+                .andExpect(jsonPath("$.data.user.lastName").value("Doe"))
                 .andExpect(jsonPath("$.message").value("Login successful"));
     }
 

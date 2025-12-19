@@ -18,24 +18,27 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    public static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512); // Secure for dev
-    private static final long EXPIRATION_TIME = 2L * 24 * 60 * 60 * 1000; // 2 days
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final com.app.events.config.JwtUtil jwtUtil;
+    private final com.app.events.service.SequenceGeneratorService sequenceGeneratorService;
+    private final com.app.events.service.EmailService emailService;
+
+    // Remove local constants SECRET_KEY and EXPIRATION_TIME as we use JwtUtil now
 
     @Override
-    public String login(String email, String password) {
+    public com.app.events.dto.LoginResponse login(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
-        return Jwts.builder()
-                .setSubject(user.getUserId())
-                .claim("email", user.getEmail())
-                .claim("role", user.getRole())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS512)
-                .compact();
+
+        String token = jwtUtil.generateToken(user.getUserId(), user.getEmail(), user.getRole());
+        java.util.Date expiresAt = jwtUtil.getExpirationDateFromToken(token);
+
+        return new com.app.events.dto.LoginResponse(token, expiresAt,
+                com.app.events.dto.LoginResponse.UserResponse.fromUser(user));
     }
 
     @Override
@@ -43,8 +46,37 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
+
+        // Generate userId in format AB00001
+        // Sync with existing users first
+            userRepository.findTopByOrderByUserIdDesc().ifPresent(lastUser -> {
+            if (lastUser.getUserId() != null && lastUser.getUserId().startsWith("AB")) {
+                try {
+                    long lastSeq = Long.parseLong(lastUser.getUserId().substring(2));
+                    sequenceGeneratorService.syncSequence("user_sequence", lastSeq);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        });
+
+        long sequence = sequenceGeneratorService.generateSequence("user_sequence");
+        String userId = String.format("AB%05d", sequence);
+        user.setUserId(userId);
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(user.getRole() == null ? Collections.singletonList("USER") : user.getRole());
-        return userRepository.save(user);
+
+        User savedUser = userRepository.save(user);
+
+        // Send welcome email
+        if (savedUser.getEmail() != null) {
+            emailService.sendSimpleMessage(
+                    savedUser.getEmail(),
+                    "Welcome to Event Planner",
+                    "Hello " + savedUser.getFirstName() + ",\n\nWelcome to our platform! Your User ID is "
+                            + savedUser.getUserId());
+        }
+
+        return savedUser;
     }
 }

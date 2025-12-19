@@ -15,9 +15,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> login(@RequestBody User user) {
-        String token = authService.login(user.getEmail(), user.getPassword());
-        return ResponseEntity.ok(ApiResponse.success("Login successful", token));
+    public ResponseEntity<ApiResponse<Object>> login(@RequestBody User user) {
+        com.app.events.dto.LoginResponse loginResponse = authService.login(user.getEmail(), user.getPassword());
+        return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
     }
 
     @PostMapping("/signup")
