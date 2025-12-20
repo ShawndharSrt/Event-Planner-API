@@ -18,4 +18,9 @@ public interface TaskRepository extends MongoRepository<Task, String> {
     List<Task> findByDueDateBetweenAndStatusNot(LocalDate start, LocalDate end, String status);
 
     long countByCreatedByAndStatus(String userId, String status);
+
+    List<Task> findByCreatedByAndDueDateBetween(String createdBy, LocalDate start, LocalDate end);
+
+    List<Task> findByCreatedByAndEventIdAndDueDateBetween(String createdBy, String eventId, LocalDate start,
+            LocalDate end);
 }

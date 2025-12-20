@@ -15,6 +15,7 @@ import com.app.events.repository.GuestRepository;
 import com.app.events.service.BudgetService;
 import com.app.events.service.EventService;
 import com.app.events.service.NotificationService;
+import com.app.events.util.AppUtils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -43,12 +44,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventWithStats> getAllEventsWithStats() {
         List<Event> events = eventRepository.findAll();
-
-        return events.stream()
-                .map(event -> {
-                    EventStats stats = getEventStats(event.getId());
-                    return eventWithStatsMapper.toEventWithStats(event, stats);
-                })
+        return events.stream().map(event ->
+                eventWithStatsMapper.toEventWithStats(event, getEventStats(event.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -59,6 +56,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event createEvent(Event event) {
+        event.setCreatedBy(AppUtils.getCurrentUserId());
         return eventRepository.save(event);
     }
 
@@ -78,49 +76,36 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<RecentEvent> getRecentEvents(int limit) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "startDate");
-        List<Event> events = eventRepository.findAll(sort);
-
-        return recentEventMapper.toDtoList(events)
-                .stream()
-                .limit(Math.max(limit, 0))
-                .toList();
+        List<Event> events = eventRepository.findAll(Sort.by(Sort.Direction.DESC, "startDate"));
+        return recentEventMapper.toRecentEventList(events).stream().limit(Math.max(limit, 0)).toList();
     }
 
     @Override
     public EventStats getEventStats(String eventId) {
-        return eventRepository.findById(eventId)
-                .map(event -> {
-                    List<Event.EventGuest> guests = event.getGuests();
-                    int totalGuests = guests.size();
-                    int confirmed = (int) guests.stream()
-                            .filter(g -> "confirmed".equalsIgnoreCase(g.getStatus()))
-                            .count();
-                    int pending = (int) guests.stream()
-                            .filter(g -> "pending".equalsIgnoreCase(g.getStatus()))
-                            .count();
-                    int declined = (int) guests.stream()
-                            .filter(g -> "declined".equalsIgnoreCase(g.getStatus()))
-                            .count();
-                    return new EventStats(totalGuests, confirmed, pending, declined);
-                })
-                .orElse(new EventStats(0, 0, 0, 0));
+        return eventRepository.findById(eventId).map(event -> {
+            List<Event.EventGuest> guests = event.getGuests();
+            int totalGuests = guests.size();
+            int confirmed = (int) guests.stream()
+                    .filter(g -> "confirmed".equalsIgnoreCase(g.getStatus())).count();
+            int pending = (int) guests.stream()
+                    .filter(g -> "pending".equalsIgnoreCase(g.getStatus())).count();
+            int declined = (int) guests.stream()
+                    .filter(g -> "declined".equalsIgnoreCase(g.getStatus())).count();
+            return new EventStats(totalGuests, confirmed, pending, declined);
+        }).orElse(new EventStats(0, 0, 0, 0));
     }
 
     @Override
     public Event addGuestsToEvent(String eventId, List<String> guestIds) {
         Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-
         if (guestIds == null || guestIds.isEmpty()) {
             return event;
         }
-
         List<Guest> guests = guestRepository.findAllById(guestIds);
 
         for (Guest masterGuest : guests) {
             Optional<Event.EventGuest> existingGuestOpt = event.getGuests().stream()
-                    .filter(g -> g.getGuestId().equals(masterGuest.getId()))
-                    .findFirst();
+                    .filter(g -> g.getGuestId().equals(masterGuest.getId())).findFirst();
 
             Event.EventGuest targetGuest;
             if (existingGuestOpt.isPresent()) {
@@ -133,8 +118,7 @@ public class EventServiceImpl implements EventService {
             }
 
             // Sync/Hydrate fields from Master Guest
-            String fullName = (masterGuest.getFirstName() != null ? masterGuest.getFirstName() : "") + " " +
-                    (masterGuest.getLastName() != null ? masterGuest.getLastName() : "");
+            String fullName = (masterGuest.getFirstName() != null ? masterGuest.getFirstName() : "") + " " + (masterGuest.getLastName() != null ? masterGuest.getLastName() : "");
             targetGuest.setName(fullName.trim());
             targetGuest.setEmail(masterGuest.getEmail());
             targetGuest.setGroup(masterGuest.getGroup());
@@ -146,8 +130,7 @@ public class EventServiceImpl implements EventService {
         if (!guestIds.isEmpty()) {
             // We could check if guests were actually added (vs existing), but for MVP just
             // alert on action.
-            notificationService.createAlert(AlertCode.EITA, null, eventId,
-                    "(" + guestIds.size() + " guests invited)");
+            notificationService.createAlert(AlertCode.EITA, null, eventId, "(" + guestIds.size() + " guests invited)");
         }
         return saved;
     }
@@ -162,36 +145,25 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event updateGuestStatus(String eventId, String guestId, String status) {
         Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        event.getGuests().stream()
-                .filter(g -> g.getGuestId().equals(guestId))
-                .findFirst()
-                .ifPresent(g -> g.setStatus(status));
+        event.getGuests().stream().filter(g -> g.getGuestId().equals(guestId)).findFirst().ifPresent(g -> g.setStatus(status));
         return eventRepository.save(event);
     }
 
     @Override
     public List<TimelineItem> getEventTimeline(String eventId) {
-        return eventRepository.findById(eventId)
-                .map(event -> {
-                    List<TimelineItem> timeline = new java.util.ArrayList<>();
+        return eventRepository.findById(eventId).map(event -> {
+            List<TimelineItem> timeline = new java.util.ArrayList<>();
 
-                    if (event.getStartTime() != null) {
-                        timeline.add(new TimelineItem(
-                                event.getStartTime(),
-                                "Event Start",
-                                event.getLocation() != null ? event.getLocation() : ""));
-                    }
+            if (event.getStartTime() != null) {
+                timeline.add(new TimelineItem(event.getStartTime(), "Event Start", event.getLocation() != null ? event.getLocation() : ""));
+            }
 
-                    if (event.getEndTime() != null) {
-                        timeline.add(new TimelineItem(
-                                event.getEndTime(),
-                                "Event End",
-                                event.getLocation() != null ? event.getLocation() : ""));
-                    }
+            if (event.getEndTime() != null) {
+                timeline.add(new TimelineItem(event.getEndTime(), "Event End", event.getLocation() != null ? event.getLocation() : ""));
+            }
 
-                    return timeline;
-                })
-                .orElse(java.util.Collections.emptyList());
+            return timeline;
+        }).orElse(java.util.Collections.emptyList());
     }
 
     @Override
@@ -199,7 +171,6 @@ public class EventServiceImpl implements EventService {
         try {
             return budgetService.getBudgetSummaryByEventId(eventId);
         } catch (RuntimeException e) {
-            // Return empty summary if no budget exists
             return new BudgetSummary(null, eventId, 0.0, 0.0, "USD", java.util.Collections.emptyList());
         }
     }

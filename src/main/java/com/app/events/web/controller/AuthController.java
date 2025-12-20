@@ -1,11 +1,16 @@
 package com.app.events.web.controller;
 
 import com.app.events.dto.ApiResponse;
+import com.app.events.dto.LoginResponse;
 import com.app.events.model.User;
 import com.app.events.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -16,7 +21,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Object>> login(@RequestBody User user) {
-        com.app.events.dto.LoginResponse loginResponse = authService.login(user.getEmail(), user.getPassword());
+        LoginResponse loginResponse = authService.login(user.getEmail(), user.getPassword());
         return ResponseEntity.ok(ApiResponse.success("Login successful", loginResponse));
     }
 

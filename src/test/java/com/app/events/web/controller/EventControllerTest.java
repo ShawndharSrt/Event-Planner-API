@@ -4,6 +4,7 @@ import com.app.events.dto.AddGuestsRequest;
 import com.app.events.dto.ApiResponse;
 import com.app.events.dto.EventWithStats;
 import com.app.events.model.Event;
+import com.app.events.service.CalendarService;
 import com.app.events.service.EventService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,9 @@ class EventControllerTest {
 
     @MockBean
     private EventService eventService;
+
+    @MockBean
+    private CalendarService calendarService;
 
     @Autowired
     private ObjectMapper objectMapper;

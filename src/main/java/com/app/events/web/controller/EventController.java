@@ -2,6 +2,7 @@ package com.app.events.web.controller;
 
 import com.app.events.dto.*;
 import com.app.events.model.Event;
+import com.app.events.service.CalendarService;
 import com.app.events.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,17 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
+    private final CalendarService calendarService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<EventWithStats>>> getAllEvents() {
         return ResponseEntity
                 .ok(ApiResponse.success("Events fetched successfully", eventService.getAllEventsWithStats()));
+    }
+
+    @GetMapping("/dropdown")
+    public ResponseEntity<ApiResponse<List<EventDropdownDto>>> getEventsDropdown() {
+        return ResponseEntity.ok(ApiResponse.success("Dropdown events fetched", calendarService.getDropdownEvents()));
     }
 
     @GetMapping("/{id}")

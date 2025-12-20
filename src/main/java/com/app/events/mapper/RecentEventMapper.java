@@ -9,9 +9,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface RecentEventMapper {
 
-    RecentEvent toDto(Event event);
+    RecentEvent toRecentEventList(Event event);
 
-    List<RecentEvent> toDtoList(List<Event> events);
+    List<RecentEvent> toRecentEventList(List<Event> events);
 }
 
 

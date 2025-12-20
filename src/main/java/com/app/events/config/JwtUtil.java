@@ -1,5 +1,6 @@
 package com.app.events.config;
 
+import com.app.events.util.ApiConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -20,9 +21,6 @@ public class JwtUtil {
     // 256-bit key for HS256 algorithm (or larger for HS512).
     // In a real app, store this in application.properties/yml
     public static final String SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
-
-    // 48 hours in milliseconds
-    private static final long EXPIRATION_TIME = 172800000;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -78,7 +76,7 @@ public class JwtUtil {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + ApiConstants.EXPIRATION_TIME))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
