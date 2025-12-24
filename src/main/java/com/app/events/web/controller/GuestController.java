@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/guests")
@@ -18,8 +18,10 @@ public class GuestController {
     private final GuestService guestService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Guest>>> getAllGuests() {
-        List<Guest> guests = guestService.getAllGuests();
+    public ResponseEntity<ApiResponse<Page<Guest>>> getAllGuests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Guest> guests = guestService.getAllGuests(page, size);
         return ResponseEntity.ok(ApiResponse.success("Guests fetched successfully", guests));
     }
 

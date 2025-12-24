@@ -4,29 +4,37 @@ import com.app.events.dto.EventGuestResponse;
 import com.app.events.model.Guest;
 import com.app.events.repository.GuestRepository;
 import com.app.events.service.GuestService;
+import com.app.events.util.RestPage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-import java.util.List;
 import java.util.Optional;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GuestServiceImpl implements GuestService {
 
     private final GuestRepository guestRepository;
 
     @Override
-    public List<Guest> getAllGuests() {
-        return guestRepository.findAll();
+    @Cacheable(value = "eventGuests", key = "'guests::' + #page + ':' + #size")
+    public Page<Guest> getAllGuests(int page, int size) {
+        log.info("CACHE MISS: Fetching guests from database for page {} and size {}", page, size);
+        return new RestPage<>(guestRepository.findAll(PageRequest.of(page, size)));
     }
 
     @Override
-    public List<EventGuestResponse> getEventGuestsByEventId(String eventId) {
-        // This method is deprecated as guests are now embedded in the Event object
-        return List.of();
+    public long countGuests() {
+        return guestRepository.count();
     }
 
     @Override
@@ -35,7 +43,9 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
+    @CacheEvict(value = "eventGuests", allEntries = true)
     public Guest createGuest(Guest guest) {
+        log.info("CACHE EVICT: Creating guest, clearing all guest caches.");
         LocalDateTime now = LocalDateTime.now();
         guest.setCreatedAt(now);
         guest.setUpdatedAt(now);
@@ -43,7 +53,9 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
+    @CacheEvict(value = "eventGuests", allEntries = true)
     public Guest updateGuest(String id, Guest guest) {
+        log.info("CACHE EVICT: Updating guest {}, clearing all guest caches.", id);
         if (guestRepository.existsById(id)) {
             guest.setId(id);
             guest.setUpdatedAt(LocalDateTime.now());
@@ -53,7 +65,9 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
+    @CacheEvict(value = "eventGuests", allEntries = true)
     public void deleteGuest(String id) {
+        log.info("CACHE EVICT: Deleting guest {}, clearing all guest caches.", id);
         guestRepository.deleteById(id);
     }
 }

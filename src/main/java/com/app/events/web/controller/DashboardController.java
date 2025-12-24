@@ -31,7 +31,7 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getOverview() {
         Map<String, Object> overview = new HashMap<>();
         overview.put("totalEvents", eventService.getAllEvents().size());
-        overview.put("totalGuests", guestService.getAllGuests().size());
+        overview.put("totalGuests", guestService.countGuests());
         overview.put("totalTasks", taskService.getAllTasks().size());
         overview.put("completedTasks", taskRepositoryCustom.findByStatus("done").size());
         return ResponseEntity.ok(ApiResponse.success("Dashboard overview fetched", overview));

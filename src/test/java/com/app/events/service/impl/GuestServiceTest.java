@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -59,9 +61,10 @@ class GuestServiceTest {
 
     @Test
     void getAllGuests_shouldReturnList() {
-        when(guestRepository.findAll()).thenReturn(Collections.singletonList(guest));
+        when(guestRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(Collections.singletonList(guest)));
 
-        assertEquals(1, guestService.getAllGuests().size());
+        assertEquals(1, guestService.getAllGuests(0, 10).getContent().size());
     }
 
     @Test

@@ -1,14 +1,14 @@
 package com.app.events.service;
 
-import com.app.events.dto.EventGuestResponse;
 import com.app.events.model.Guest;
-import java.util.List;
+import org.springframework.data.domain.Page;
+
 import java.util.Optional;
 
 public interface GuestService {
-    List<Guest> getAllGuests();
+    Page<Guest> getAllGuests(int page, int size);
 
-    List<EventGuestResponse> getEventGuestsByEventId(String eventId);
+    long countGuests();
 
     Optional<Guest> getGuestById(String id);
 

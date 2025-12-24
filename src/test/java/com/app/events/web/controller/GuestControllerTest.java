@@ -23,9 +23,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.data.domain.PageImpl;
 
 @WebMvcTest(value = GuestController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
@@ -67,11 +69,14 @@ class GuestControllerTest {
 
     @Test
     void getAllGuests_shouldReturnListOfGuests() throws Exception {
-        when(guestService.getAllGuests()).thenReturn(Collections.singletonList(guest));
+        when(guestService.getAllGuests(anyInt(), anyInt()))
+                .thenReturn(new PageImpl<>(Collections.singletonList(guest)));
 
-        mockMvc.perform(get("/api/guests"))
+        mockMvc.perform(get("/api/guests")
+                .param("page", "0")
+                .param("size", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data[0].id").value("gst-1"));
+                .andExpect(jsonPath("$.data.content[0].id").value("gst-1"));
     }
 
     @Test
