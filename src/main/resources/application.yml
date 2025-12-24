@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: events
+  data:
+    mongodb:
+      uri: mongodb+srv://${MONGO_USER}:${MONGO_PASS}@event-clusters.aumhwxw.mongodb.net/${MONGO_DB}?retryWrites=true&w=majority
+      auto-index-creation: true
+  mail:
+    host: ${SMTP}
+    port: 587
+    username: ${EMAIL}
+    password: ${EMAIL_PASS}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb: DEBUG

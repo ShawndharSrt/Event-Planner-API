@@ -31,8 +31,8 @@ class EmailServiceTest {
     @Test
     void sendSimpleMessage_shouldSendEmail() {
         // Given
-        ReflectionTestUtils.setField(emailService, "fromEmail", "b.p.shawndharsrt10@gmail.com");
-        String to = "b.p.shawndharsrt10@gmail.com";
+        ReflectionTestUtils.setField(emailService, "fromEmail", "test@gmail.com");
+        String to = "test@gmail.com";
         String subject = "Test Subject";
         String text = "Test Body";
 
@@ -46,11 +46,11 @@ class EmailServiceTest {
     @Test
     void sendHtmlMessage_shouldSendMimeMessage() {
         // Given
-        ReflectionTestUtils.setField(emailService, "fromEmail", "test@example.com");
+        ReflectionTestUtils.setField(emailService, "fromEmail", "test@gmail.com");
         MimeMessage mimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
 
-        String to = "recipient@example.com";
+        String to = "test@gmail.com";
         String subject = "HTML Subject";
         String htmlBody = "<h1>Hello</h1>";
 
