@@ -3,9 +3,12 @@ package com.app.events.service;
 import com.app.events.dto.BudgetSummary;
 import com.app.events.dto.EventStats;
 import com.app.events.dto.EventWithStats;
+import com.app.events.dto.GuestImportResponse;
 import com.app.events.dto.RecentEvent;
 import com.app.events.dto.TimelineItem;
 import com.app.events.model.Event;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -35,4 +38,7 @@ public interface EventService {
     Event removeGuestFromEvent(String eventId, String guestId);
 
     Event updateGuestStatus(String eventId, String guestId, String status);
+
+    GuestImportResponse importGuestsFromExcel(MultipartFile file);
+
 }

@@ -1,10 +1,16 @@
 package com.app.events.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelReader;
+import com.alibaba.excel.read.metadata.ReadSheet;
 import com.app.events.dto.BudgetSummary;
 import com.app.events.dto.EventStats;
 import com.app.events.dto.EventWithStats;
+import com.app.events.dto.GuestExcelDto;
+import com.app.events.dto.GuestImportResponse;
 import com.app.events.dto.RecentEvent;
 import com.app.events.dto.TimelineItem;
+import com.app.events.mapper.EventGuestMapper;
 import com.app.events.mapper.EventWithStatsMapper;
 import com.app.events.mapper.RecentEventMapper;
 import com.app.events.model.Event;
@@ -15,14 +21,21 @@ import com.app.events.repository.GuestRepository;
 import com.app.events.service.BudgetService;
 import com.app.events.service.EventService;
 import com.app.events.service.NotificationService;
+import com.app.events.service.excel.GuestImportListener;
 import com.app.events.util.AppUtils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +45,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final RecentEventMapper recentEventMapper;
     private final EventWithStatsMapper eventWithStatsMapper;
+    private final EventGuestMapper eventGuestMapper;
     private final BudgetService budgetService;
     private final GuestRepository guestRepository;
     private final NotificationService notificationService;
@@ -44,8 +58,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventWithStats> getAllEventsWithStats() {
         List<Event> events = eventRepository.findAll();
-        return events.stream().map(event ->
-                eventWithStatsMapper.toEventWithStats(event, getEventStats(event.getId())))
+        return events.stream().map(event -> eventWithStatsMapper.toEventWithStats(event, getEventStats(event.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -118,7 +131,8 @@ public class EventServiceImpl implements EventService {
             }
 
             // Sync/Hydrate fields from Master Guest
-            String fullName = (masterGuest.getFirstName() != null ? masterGuest.getFirstName() : "") + " " + (masterGuest.getLastName() != null ? masterGuest.getLastName() : "");
+            String fullName = (masterGuest.getFirstName() != null ? masterGuest.getFirstName() : "") + " "
+                    + (masterGuest.getLastName() != null ? masterGuest.getLastName() : "");
             targetGuest.setName(fullName.trim());
             targetGuest.setEmail(masterGuest.getEmail());
             targetGuest.setGroup(masterGuest.getGroup());
@@ -145,25 +159,28 @@ public class EventServiceImpl implements EventService {
     @Override
     public Event updateGuestStatus(String eventId, String guestId, String status) {
         Event event = getEventById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-        event.getGuests().stream().filter(g -> g.getGuestId().equals(guestId)).findFirst().ifPresent(g -> g.setStatus(status));
+        event.getGuests().stream().filter(g -> g.getGuestId().equals(guestId)).findFirst()
+                .ifPresent(g -> g.setStatus(status));
         return eventRepository.save(event);
     }
 
     @Override
     public List<TimelineItem> getEventTimeline(String eventId) {
         return eventRepository.findById(eventId).map(event -> {
-            List<TimelineItem> timeline = new java.util.ArrayList<>();
+            List<TimelineItem> timeline = new ArrayList<>();
 
             if (event.getStartTime() != null) {
-                timeline.add(new TimelineItem(event.getStartTime(), "Event Start", event.getLocation() != null ? event.getLocation() : ""));
+                timeline.add(new TimelineItem(event.getStartTime(), "Event Start",
+                        event.getLocation() != null ? event.getLocation() : ""));
             }
 
             if (event.getEndTime() != null) {
-                timeline.add(new TimelineItem(event.getEndTime(), "Event End", event.getLocation() != null ? event.getLocation() : ""));
+                timeline.add(new TimelineItem(event.getEndTime(), "Event End",
+                        event.getLocation() != null ? event.getLocation() : ""));
             }
 
             return timeline;
-        }).orElse(java.util.Collections.emptyList());
+        }).orElse(Collections.emptyList());
     }
 
     @Override
@@ -171,7 +188,77 @@ public class EventServiceImpl implements EventService {
         try {
             return budgetService.getBudgetSummaryByEventId(eventId);
         } catch (RuntimeException e) {
-            return new BudgetSummary(null, eventId, 0.0, 0.0, "USD", java.util.Collections.emptyList());
+            return new BudgetSummary(null, eventId, 0.0, 0.0, "USD", Collections.emptyList());
+        }
+    }
+
+    @Override
+    @Transactional
+    public GuestImportResponse importGuestsFromExcel(MultipartFile file) {
+        try {
+            // 1. Get all sheet names to find the one matching an event
+            ExcelReader excelReader = EasyExcel.read(file.getInputStream()).build();
+            List<ReadSheet> sheets = excelReader.excelExecutor().sheetList();
+
+            String matchingSheetName = null;
+            Event targetEvent = null;
+
+            for (ReadSheet sheet : sheets) {
+                // Check if this sheet name matches an event title
+                Optional<Event> eventOpt = eventRepository.findByTitle(sheet.getSheetName());
+                if (eventOpt.isPresent()) {
+                    matchingSheetName = sheet.getSheetName();
+                    targetEvent = eventOpt.get();
+                    break;
+                }
+            }
+
+            // Close the reader used for inspecting sheets
+            excelReader.finish();
+
+            if (targetEvent == null) {
+                throw new RuntimeException("No sheet name matches an existing event title.");
+            }
+
+            // 2. Read the matching sheet
+            GuestImportListener listener = new GuestImportListener();
+            EasyExcel.read(file.getInputStream(), GuestExcelDto.class, listener).sheet(matchingSheetName).doRead();
+
+            List<GuestExcelDto> importedGuests = listener.getGuests();
+
+            // 3. Process guests
+            int insertedCount = 0;
+            int duplicateCount = 0;
+            List<String> duplicateEmails = new ArrayList<>();
+
+            if (targetEvent.getGuests() == null) {
+                targetEvent.setGuests(new ArrayList<>());
+            }
+
+            for (GuestExcelDto dto : importedGuests) {
+                // Check duplicate by email within the event
+                boolean exists = targetEvent.getGuests().stream().anyMatch(g -> g.getEmail() != null
+                        && dto.getEmail() != null && g.getEmail().equalsIgnoreCase(dto.getEmail()));
+
+                if (exists) {
+                    duplicateCount++;
+                    if (dto.getEmail() != null) {
+                        duplicateEmails.add(dto.getEmail());
+                    }
+                } else {
+                    Event.EventGuest newGuest = eventGuestMapper.toEventGuest(dto);
+                    targetEvent.getGuests().add(newGuest);
+                    insertedCount++;
+                }
+            }
+
+            eventRepository.save(targetEvent);
+
+            return new GuestImportResponse("Guest import completed", targetEvent.getTitle(), insertedCount,
+                    duplicateCount, duplicateEmails);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read Excel file", e);
         }
     }
 }

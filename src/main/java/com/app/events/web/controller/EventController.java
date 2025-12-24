@@ -7,6 +7,7 @@ import com.app.events.service.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -118,5 +119,10 @@ public class EventController {
     public ResponseEntity<ApiResponse<BudgetSummary>> getEventBudgetSummary(@PathVariable String id) {
         return ResponseEntity.ok(ApiResponse.success("Event budget summary fetched successfully",
                 eventService.getEventBudgetSummary(id)));
+    }
+
+    @PostMapping("/upload-guests")
+    public ResponseEntity<ApiResponse<GuestImportResponse>> uploadGuests(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success( "Excel uploaded successfully", eventService.importGuestsFromExcel(file)));
     }
 }
