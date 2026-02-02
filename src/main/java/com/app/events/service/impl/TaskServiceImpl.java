@@ -9,6 +9,7 @@ import com.app.events.model.enums.AlertCode;
 import com.app.events.repository.TaskRepository;
 import com.app.events.service.NotificationService;
 import com.app.events.service.TaskService;
+import com.app.events.util.ApiConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -52,7 +53,7 @@ public class TaskServiceImpl implements TaskService {
             Task saved = taskRepository.save(existingTask);
 
             // Check for TCA (Task Completed Alert)
-            if (!"completed".equalsIgnoreCase(oldStatus) && "completed".equalsIgnoreCase(saved.getStatus())) {
+            if (!ApiConstants.COMPLETED.equalsIgnoreCase(oldStatus) && ApiConstants.COMPLETED.equalsIgnoreCase(saved.getStatus())) {
                 // Prevent duplicate online alert if strictly required, but "completed" happens
                 // once usually.
                 // For stricter logic we could check existing alerts.

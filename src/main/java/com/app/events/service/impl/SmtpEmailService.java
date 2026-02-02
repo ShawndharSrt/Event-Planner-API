@@ -39,7 +39,6 @@ public class SmtpEmailService implements EmailService {
             log.info("Simple email sent to {}", to);
         } catch (Exception e) {
             log.error("Failed to send simple email to {}", to, e);
-            // Depending on requirements, we might want to rethrow or handle differently
         }
     }
 
@@ -48,7 +47,6 @@ public class SmtpEmailService implements EmailService {
     public void sendHtmlMessage(String to, String subject, String htmlBody, Map<String, File> attachments) {
         try {
             MimeMessage message = emailSender.createMimeMessage();
-            // true = multipart
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setFrom(fromEmail);

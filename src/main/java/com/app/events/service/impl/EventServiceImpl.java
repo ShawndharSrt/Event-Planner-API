@@ -242,9 +242,7 @@ public class EventServiceImpl implements EventService {
 
                 if (exists) {
                     duplicateCount++;
-                    if (dto.getEmail() != null) {
-                        duplicateEmails.add(dto.getEmail());
-                    }
+                    duplicateEmails.add(dto.getEmail());
                 } else {
                     Event.EventGuest newGuest = eventGuestMapper.toEventGuest(dto);
                     targetEvent.getGuests().add(newGuest);

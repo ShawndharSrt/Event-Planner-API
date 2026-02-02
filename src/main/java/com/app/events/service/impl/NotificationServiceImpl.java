@@ -64,15 +64,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public int markAllAsRead(String userId) {
         List<Notification> unreadNotifications = notificationRepository.findByUserIdAndReadFalse(userId);
-        LocalDateTime now = LocalDateTime.now();
-
-        unreadNotifications.forEach(notification -> {
-            notification.setRead(true);
-            if (notification.getClosedAt() == null) {
-                notification.setClosedAt(now);
-            }
+        unreadNotifications.stream().peek(data->{
+            data.setRead(true);
+            data.setClosedAt(LocalDateTime.now());
         });
-
         notificationRepository.saveAll(unreadNotifications);
         return unreadNotifications.size();
     }
