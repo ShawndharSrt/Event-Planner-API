@@ -40,6 +40,11 @@ import java.util.List;
 import java.util.Optional;
 
 import java.util.stream.Collectors;
+import com.app.events.repository.UserRepository;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -55,22 +60,64 @@ public class EventServiceImpl implements EventService {
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final WhatsAppService whatsappService;
+    private final UserRepository userRepository;
 
     @Override
     public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+        String currentUserId = AppUtils.getCurrentUserId();
+        List<Event> events;
+        if (isAdmin(currentUserId)) {
+            events = eventRepository.findAll();
+        } else {
+            events = eventRepository.findByCreatedBy(currentUserId);
+        }
+        populateCreatedByName(events);
+        return events;
     }
 
     @Override
     public List<EventWithStats> getAllEventsWithStats() {
-        List<Event> events = eventRepository.findAll();
+        String currentUserId = AppUtils.getCurrentUserId();
+        List<Event> events;
+        if (isAdmin(currentUserId)) {
+            events = eventRepository.findAll();
+        } else {
+            events = eventRepository.findByCreatedBy(currentUserId);
+        }
+        populateCreatedByName(events);
         return events.stream().map(event -> eventWithStatsMapper.toEventWithStats(event, getEventStats(event.getId())))
                 .collect(Collectors.toList());
     }
 
+    private void populateCreatedByName(List<? extends Event> events) {
+        Set<String> userIds = events.stream()
+                .map(Event::getCreatedBy)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (userIds.isEmpty()) {
+            return;
+        }
+
+        Map<String, String> userNames = new HashMap<>();
+        userRepository.findByUserIdIn(userIds).forEach(user -> {
+            String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " "
+                    + (user.getLastName() != null ? user.getLastName() : "");
+            userNames.put(user.getUserId(), fullName.trim());
+        });
+
+        events.forEach(event -> {
+            if (event.getCreatedBy() != null) {
+                event.setCreatedByName(userNames.getOrDefault(event.getCreatedBy(), "Unknown User"));
+            }
+        });
+    }
+
     @Override
     public Optional<Event> getEventById(String id) {
-        return eventRepository.findById(id);
+        String currentUserId = AppUtils.getCurrentUserId();
+        return eventRepository.findById(id)
+                .filter(event -> isAdmin(currentUserId) || currentUserId.equals(event.getCreatedBy()));
     }
 
     @Override
@@ -81,7 +128,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event updateEvent(String id, Event event) {
+        String currentUserId = AppUtils.getCurrentUserId();
         return eventRepository.findById(id).map(existing -> {
+            if (!isAdmin(currentUserId) && !currentUserId.equals(existing.getCreatedBy())) {
+                throw new RuntimeException("Unauthorized to update this event");
+            }
             event.setId(id);
             // Preserve fields that might not be sent from the frontend during an update
             event.setCreatedBy(existing.getCreatedBy());
@@ -101,12 +152,24 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public void deleteEvent(String id) {
+        String currentUserId = AppUtils.getCurrentUserId();
+        Event existing = eventRepository.findById(id).orElseThrow(() -> new RuntimeException("Event not found"));
+        if (!isAdmin(currentUserId) && !currentUserId.equals(existing.getCreatedBy())) {
+            throw new RuntimeException("Unauthorized to delete this event");
+        }
         eventRepository.deleteById(id);
     }
 
     @Override
     public List<RecentEvent> getRecentEvents(int limit) {
-        List<Event> events = eventRepository.findAll(Sort.by(Sort.Direction.DESC, "startDate"));
+        String currentUserId = AppUtils.getCurrentUserId();
+        Sort sort = Sort.by(Sort.Direction.DESC, "startDate");
+        List<Event> events;
+        if (isAdmin(currentUserId)) {
+            events = eventRepository.findAll(sort);
+        } else {
+            events = eventRepository.findByCreatedBy(currentUserId, sort);
+        }
         return recentEventMapper.toRecentEventList(events).stream().limit(Math.max(limit, 0)).toList();
     }
 
@@ -209,7 +272,7 @@ public class EventServiceImpl implements EventService {
         try {
             return budgetService.getBudgetSummaryByEventId(eventId);
         } catch (RuntimeException e) {
-            return new BudgetSummary(null, eventId, 0.0, 0.0, "USD", Collections.emptyList());
+            return new BudgetSummary(null, eventId, 0.0, 0.0, "INR", Collections.emptyList());
         }
     }
 
@@ -319,5 +382,14 @@ public class EventServiceImpl implements EventService {
                 }
             }
         }
+    }
+
+    private boolean isAdmin(String userId) {
+        if (userId == null)
+            return false;
+        return userRepository.findByUserId(userId)
+                .map(com.app.events.model.User::getRole)
+                .map(roles -> roles.stream().anyMatch(role -> "ADMIN".equalsIgnoreCase(role)))
+                .orElse(false);
     }
 }

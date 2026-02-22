@@ -17,35 +17,39 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.time.Duration;
 import java.util.Objects;
 
-@Configuration
-@EnableCaching
+// @Configuration
+// @EnableCaching
 public class RedisCacheConfig {
 
-    @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(),
-                ObjectMapper.DefaultTyping.NON_FINAL);
+    // @Bean
+    // public RedisCacheManager cacheManager(RedisConnectionFactory
+    // connectionFactory) {
+    // ObjectMapper objectMapper = new ObjectMapper();
+    // objectMapper.registerModule(new JavaTimeModule());
+    // objectMapper.activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(),
+    // ObjectMapper.DefaultTyping.NON_FINAL);
 
-        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
+    // GenericJackson2JsonRedisSerializer serializer = new
+    // GenericJackson2JsonRedisSerializer(objectMapper);
 
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(10))
-                .disableCachingNullValues()
-                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
+    // RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+    // .entryTtl(Duration.ofMinutes(10))
+    // .disableCachingNullValues()
+    // .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new
+    // StringRedisSerializer()))
+    // .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
 
-        return RedisCacheManager.builder(connectionFactory).cacheDefaults(config).build();
-    }
+    // return
+    // RedisCacheManager.builder(connectionFactory).cacheDefaults(config).build();
+    // }
 
-    @Bean
-    public CommandLineRunner clearCacheOnStartup(CacheManager cacheManager) {
-        return args -> {
-            if (Objects.nonNull(cacheManager.getCache("eventGuests"))) {
-                Objects.requireNonNull(cacheManager.getCache("eventGuests")).clear();
-                System.out.println("FLUSHED REDIS CACHE: eventGuests");
-            }
-        };
-    }
+    // @Bean
+    // public CommandLineRunner clearCacheOnStartup(CacheManager cacheManager) {
+    // return args -> {
+    // if (Objects.nonNull(cacheManager.getCache("eventGuests"))) {
+    // Objects.requireNonNull(cacheManager.getCache("eventGuests")).clear();
+    // System.out.println("FLUSHED REDIS CACHE: eventGuests");
+    // }
+    // };
+    // }
 }

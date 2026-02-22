@@ -24,4 +24,7 @@ public abstract class BaseEntity {
 
     @Field("created_by")
     private String createdBy; // User ID who created this entity
+
+    @org.springframework.data.annotation.Transient
+    private String createdByName;
 }

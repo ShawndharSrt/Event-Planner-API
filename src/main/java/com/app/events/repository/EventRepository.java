@@ -13,5 +13,7 @@ public interface EventRepository extends MongoRepository<Event, String> {
 
     List<Event> findByCreatedBy(String createdBy);
 
+    List<Event> findByCreatedBy(String createdBy, org.springframework.data.domain.Sort sort);
+
     Optional<Event> findByTitle(String title);
 }

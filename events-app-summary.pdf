@@ -1,0 +1,59 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+6 0 obj
+<< /Length 2067 >>
+stream
+BT /F2 18 Tf 1 0 0 1 54 760 Tm (Event Planner API - Summary) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 734 Tm (What it is) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 718 Tm (Spring Boot REST API for event planning and management, backed by MongoDB.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 705 Tm (Endpoints cover events, guests, tasks, budgets, calendars, dashboards, and auth.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 688 Tm (Who it's for) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 672 Tm (Not found in repo.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 655 Tm (What it does) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 639 Tm (- CRUD events plus stats, timelines, and budget summaries.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 626 Tm (- Guest management with pagination and event assignment/status updates.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 613 Tm (- Task management by event with due dates and status updates.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 600 Tm (- Budgets, categories, and expenses with summary totals.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 587 Tm (- Calendar data and dashboard overview/recent items.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 574 Tm (- Auth \(signup/login/forgot/reset\), notifications, Excel guest import.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 557 Tm (How it works) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 541 Tm (- REST controllers under /api/* handle requests.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 528 Tm (- Services implement business logic; repositories persist to MongoDB.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 515 Tm (- JWT filter secures requests; auth endpoints issue tokens.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 502 Tm (- Notifications and alert checks support reminders.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 489 Tm (- Guest Excel import uses EasyExcel reader.) Tj ET
+BT /F2 12 Tf 1 0 0 1 54 472 Tm (How to run) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 456 Tm (- Requires Java 21 \(pom.xml\) and MongoDB connection env vars.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 443 Tm (- Set env vars: MONGO_USER, MONGO_PASS, MONGO_DB.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 430 Tm (- Set SMTP env vars: SMTP, EMAIL, EMAIL_PASS.) Tj ET
+BT /F1 10 Tf 1 0 0 1 54 417 Tm (- Run ./mvnw spring-boot:run; API listens on port 8080.) Tj ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000000321 00000 n 
+0000000396 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2514
+%%EOF

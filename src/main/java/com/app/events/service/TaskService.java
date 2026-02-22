@@ -20,4 +20,6 @@ public interface TaskService {
     void deleteTask(String id);
 
     List<DashboardTask> getDashboardTasks(int limit);
+
+    long getCompletedTasksCount();
 }

@@ -12,4 +12,7 @@ public interface GuestRepository extends MongoRepository<Guest, String> {
     Optional<Guest> findByGuestId(String id);
 
     long countByCreatedBy(String userId);
+
+    org.springframework.data.domain.Page<Guest> findByCreatedBy(String createdBy,
+            org.springframework.data.domain.Pageable pageable);
 }
