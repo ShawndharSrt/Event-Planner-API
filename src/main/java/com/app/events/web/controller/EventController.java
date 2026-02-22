@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/events")
@@ -123,6 +128,55 @@ public class EventController {
 
     @PostMapping("/upload-guests")
     public ResponseEntity<ApiResponse<GuestImportResponse>> uploadGuests(@RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(ApiResponse.success( "Excel uploaded successfully", eventService.importGuestsFromExcel(file)));
+        return ResponseEntity
+                .ok(ApiResponse.success("Excel uploaded successfully", eventService.importGuestsFromExcel(file)));
+    }
+
+    @PostMapping("/{eventId}/upload-cover")
+    public ResponseEntity<ApiResponse<String>> uploadCoverImage(
+            @PathVariable String eventId,
+            @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("File is empty"));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Only JPEG and PNG images are allowed"));
+        }
+
+        try {
+            String extension = contentType.equals("image/png") ? ".png" : ".jpg";
+            String filename = eventId + extension;
+
+            java.util.Optional<Event> eventOpt = eventService.getEventById(eventId);
+            if (eventOpt.isEmpty()) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.error("Event not found"));
+            }
+
+            Path uploadDir = Paths.get("uploads", "events");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+
+            Path filePath = uploadDir.resolve(filename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            String fileUrl = "http://localhost:8080/uploads/events/" + filename;
+
+            Event event = eventOpt.get();
+            event.setCoverImage(fileUrl);
+            eventService.updateEvent(eventId, event);
+
+            return ResponseEntity.ok(ApiResponse.success("Cover image uploaded successfully", fileUrl));
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponse.error("Failed to upload cover image"));
+        }
     }
 }

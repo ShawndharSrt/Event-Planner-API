@@ -18,4 +18,7 @@ public class User extends BaseEntity {
     private String password;
     private List<String> role;
     private String avatar;
+
+    private String resetToken;
+    private Long resetTokenExpiry;
 }

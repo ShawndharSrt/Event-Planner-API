@@ -36,5 +36,6 @@ public class Event extends BaseEntity {
         private String status;
         private String dietary;
         private String notes;
+        private String phone;
     }
 }

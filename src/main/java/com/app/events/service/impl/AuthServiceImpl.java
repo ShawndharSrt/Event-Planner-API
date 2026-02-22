@@ -7,13 +7,17 @@ import com.app.events.repository.UserRepository;
 import com.app.events.service.AuthService;
 import com.app.events.service.EmailService;
 import com.app.events.service.SequenceGeneratorService;
+import com.app.events.web.controller.model.ResetPasswordRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final SequenceGeneratorService sequenceGeneratorService;
     private final EmailService emailService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @Override
     public LoginResponse login(String email, String password) {
@@ -69,5 +76,57 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return savedUser;
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            // Important: do NOT reveal email existence
+            return;
+        }
+
+        User user = optionalUser.get();
+
+        String resetToken = UUID.randomUUID().toString();
+        user.setResetToken(resetToken);
+        user.setResetTokenExpiry(System.currentTimeMillis() + 15 * 60 * 1000);
+
+        userRepository.save(user);
+
+        String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
+
+        emailService.sendSimpleMessage(
+                email,
+                "Reset Password",
+                "Click the link to reset your password:\n" + resetLink
+        );
+    }
+
+    @Override
+    public LoginResponse resetPassword(ResetPasswordRequest request) {
+
+        User user = userRepository.findByResetToken(request.getToken())
+                .orElseThrow(() -> new RuntimeException("Invalid or expired token"));
+
+        if (user.getResetTokenExpiry() < System.currentTimeMillis()) {
+            throw new RuntimeException("Invalid or expired token");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
+        String token = jwtUtil.generateToken(
+                user.getUserId(),
+                user.getEmail(),
+                user.getRole()
+        );
+        Date expiresAt = jwtUtil.getExpirationDateFromToken(token);
+        return new LoginResponse(
+                token,
+                expiresAt,
+                LoginResponse.UserResponse.fromUser(user)
+        );
     }
 }

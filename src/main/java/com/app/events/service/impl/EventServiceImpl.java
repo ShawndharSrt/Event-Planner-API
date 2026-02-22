@@ -19,12 +19,15 @@ import com.app.events.model.enums.AlertCode;
 import com.app.events.repository.EventRepository;
 import com.app.events.repository.GuestRepository;
 import com.app.events.service.BudgetService;
+import com.app.events.service.EmailService;
 import com.app.events.service.EventService;
 import com.app.events.service.NotificationService;
+import com.app.events.service.WhatsAppService;
 import com.app.events.service.excel.GuestImportListener;
 import com.app.events.util.AppUtils;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +43,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
@@ -49,6 +53,8 @@ public class EventServiceImpl implements EventService {
     private final BudgetService budgetService;
     private final GuestRepository guestRepository;
     private final NotificationService notificationService;
+    private final EmailService emailService;
+    private final WhatsAppService whatsappService;
 
     @Override
     public List<Event> getAllEvents() {
@@ -75,11 +81,22 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event updateEvent(String id, Event event) {
-        if (eventRepository.existsById(id)) {
+        return eventRepository.findById(id).map(existing -> {
             event.setId(id);
+            // Preserve fields that might not be sent from the frontend during an update
+            event.setCreatedBy(existing.getCreatedBy());
+            event.setCreatedAt(existing.getCreatedAt());
+
+            if (event.getCoverImage() == null) {
+                event.setCoverImage(existing.getCoverImage());
+            }
+
+            if (event.getGuests() == null || event.getGuests().isEmpty()) {
+                event.setGuests(existing.getGuests());
+            }
+
             return eventRepository.save(event);
-        }
-        throw new RuntimeException("Event not found with id: " + id);
+        }).orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
     }
 
     @Override
@@ -138,8 +155,12 @@ public class EventServiceImpl implements EventService {
             targetGuest.setGroup(masterGuest.getGroup());
             targetGuest.setDietary(masterGuest.getDietary());
             targetGuest.setNotes(masterGuest.getNotes());
+            targetGuest.setPhone(masterGuest.getPhone());
         }
         Event saved = eventRepository.save(event);
+
+        sendInvitations(saved, guests);
+
         // Alert EITA: "Invitation Triggered Alert" for added guests
         if (!guestIds.isEmpty()) {
             // We could check if guests were actually added (vs existing), but for MVP just
@@ -257,6 +278,46 @@ public class EventServiceImpl implements EventService {
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to read Excel file", e);
+        }
+    }
+
+    private void sendInvitations(Event event, List<Guest> guests) {
+        String eventName = event.getTitle() != null ? event.getTitle() : "Our Event";
+        String date = event.getStartDate() != null ? event.getStartDate().toString() : "TBD";
+        String location = event.getLocation() != null ? event.getLocation() : "TBD";
+        String hostName = "Event Host"; // Placeholder as host name is not directly on Event entity
+
+        for (Guest guest : guests) {
+            String guestName = (guest.getFirstName() != null ? guest.getFirstName() : "") + " "
+                    + (guest.getLastName() != null ? guest.getLastName() : "");
+            guestName = guestName.trim();
+            if (guestName.isEmpty()) {
+                guestName = "Guest";
+            }
+
+            String message = String.format(
+                    "Hello %s,\n\nYou are invited to %s!\nDate: %s\nLocation: %s\n\nBest regards,\n%s",
+                    guestName, eventName, date, location, hostName);
+
+            String subject = "Invitation to " + eventName;
+
+            // Send WhatsApp
+            if (guest.getPhone() != null && !guest.getPhone().trim().isEmpty()) {
+                try {
+                    whatsappService.sendMessage(guest.getPhone(), message);
+                } catch (Exception e) {
+                    log.error("Failed to send WhatsApp invitation to {}", guest.getPhone(), e);
+                }
+            }
+
+            // Send Email
+            if (guest.getEmail() != null && !guest.getEmail().trim().isEmpty()) {
+                try {
+                    emailService.sendSimpleMessage(guest.getEmail(), subject, message);
+                } catch (Exception e) {
+                    log.error("Failed to send Email invitation to {}", guest.getEmail(), e);
+                }
+            }
         }
     }
 }
