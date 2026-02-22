@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -49,12 +50,14 @@ public class SmtpEmailService implements EmailService {
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlBody, true); // true = isHtml
-
-            if (attachments != null && !attachments.isEmpty()) {
+            String sender = this.fromEmail;
+            if (sender != null) {
+                helper.setFrom(sender);
+            }
+            helper.setTo(Objects.nonNull(to) ? to : "");
+            helper.setSubject(Objects.nonNull(subject) ? subject : "");
+            helper.setText(Objects.nonNull(htmlBody) ? htmlBody : "", true);
+            if (Objects.nonNull(attachments) && !attachments.isEmpty()) {
                 for (Map.Entry<String, File> entry : attachments.entrySet()) {
                     FileSystemResource file = new FileSystemResource(entry.getValue());
                     helper.addAttachment(entry.getKey(), file);

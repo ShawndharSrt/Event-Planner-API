@@ -148,7 +148,6 @@ public class BudgetServiceImpl implements BudgetService {
             budget.setEventId(eventId);
         }
 
-        // Ensure all categories have IDs
         if (budget.getCategories() != null) {
             budget.getCategories().forEach(category -> {
                 if (category.getId() == null || category.getId().isEmpty()) {

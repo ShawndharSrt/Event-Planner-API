@@ -18,7 +18,6 @@ import java.util.Map;
 public class NotificationController {
     private final NotificationService notificationService;
 
-    // /api/notifications?userId=...
     @GetMapping
     public ResponseEntity<ApiResponse<List<Notification>>> getNotifications(
             @RequestParam(required = false) String userId, @RequestParam(required = false) String eventId) {
